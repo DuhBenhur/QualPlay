@@ -64,8 +64,8 @@ O **Qual Play** é uma aplicação desenvolvida em React com TypeScript que ofer
 
 1. **Clone o repositório**
 ```bash
-git clone https://github.com/eduardobenhur/busca-filmes-pro.git
-cd busca-filmes-pro
+git clone https://github.com/DuhBenhur/QualPlay.git
+cd qualplay
 ```
 
 2. **Instale as dependências**
@@ -155,14 +155,14 @@ npm run lint
 ## 👨‍💻 Desenvolvedor
 
 **Eduardo Ben-Hur**
-- Desenvolvedor Full Stack especializado em React, TypeScript e Python
-- Apaixonado por criar soluções elegantes e funcionais
-- Focado em experiência do usuário e código de qualidade
+- Especialista em Data Science e Digital Business Full
+- Apaixonado por tecnologia e novos aprendizados
+- Focado em aprendizado contínuo
 
 ### Contato
-- GitHub: [@eduardobenhur](https://github.com/eduardobenhur)
+- GitHub: [@eduardobenhur](https://github.com/DuhBenhur)
 - LinkedIn: [Eduardo Ben-Hur](https://linkedin.com/in/eduardobenhur)
-- Portfolio: [eduardobenhur.dev](https://eduardobenhur.dev)
+- Portfolio: [eduardobenhur.dev](https://github.com/DuhBenhur?tab=repositories)
 
 ## 📄 Licença
 
