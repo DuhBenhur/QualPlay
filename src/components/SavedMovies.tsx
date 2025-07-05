@@ -87,18 +87,14 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
     pdf.setFillColor(15, 23, 42);
     pdf.rect(0, 0, pageWidth, 60, 'F');
     
-    pdf.setTextColor(59, 130, 246);
-    pdf.setFontSize(24);
-    pdf.text('❤️', 20, 35);
-    
     pdf.setFontSize(22);
     pdf.setTextColor(255, 255, 255);
-    pdf.text('Meus Filmes Salvos', 40, 30);
+    pdf.text('QualPlay - Meus Filmes Salvos', 20, 30);
     
     pdf.setFontSize(10);
     pdf.setTextColor(148, 163, 184);
-    pdf.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 40, 45);
-    pdf.text(`Total de filmes salvos: ${savedMovies.length}`, 40, 55);
+    pdf.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 20, 45);
+    pdf.text(`Total de filmes salvos: ${savedMovies.length}`, 20, 55);
     
     let yPosition = 80;
     
@@ -161,10 +157,10 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
       pdf.setFontSize(8);
       pdf.setTextColor(148, 163, 184);
       pdf.text(`Página ${i} de ${totalPages}`, pageWidth - 30, pageHeight - 10);
-      pdf.text('Meus Filmes Salvos - QualPlay', 20, pageHeight - 10);
+      pdf.text('QualPlay - Eduardo Ben-Hur', 20, pageHeight - 10);
     }
     
-    pdf.save(`meus-filmes-salvos-${new Date().toISOString().split('T')[0]}.pdf`);
+    pdf.save(`qualplay-salvos-${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   if (!isOpen) {
