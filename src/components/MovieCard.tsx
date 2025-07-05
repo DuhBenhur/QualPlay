@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Calendar, User, Play } from 'lucide-react';
+import { Star, Calendar, User, Play, Tv } from 'lucide-react';
 import { MovieDetails } from '../types/movie';
 import { getImageUrl } from '../services/tmdbApi';
 
@@ -16,6 +16,24 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick }) => {
   const formatGenres = (genres: any[]) => {
     if (!genres || genres.length === 0) return 'Gênero não informado';
     return genres.map(g => g.name).join(', ');
+  };
+
+  const getStreamingBadgeColor = (service: string) => {
+    const lowerService = service.toLowerCase();
+    if (lowerService.includes('netflix')) return 'bg-red-600';
+    if (lowerService.includes('amazon') || lowerService.includes('prime')) return 'bg-blue-600';
+    if (lowerService.includes('disney')) return 'bg-blue-800';
+    if (lowerService.includes('hbo') || lowerService.includes('max')) return 'bg-purple-600';
+    if (lowerService.includes('paramount')) return 'bg-blue-500';
+    if (lowerService.includes('apple')) return 'bg-gray-800';
+    if (lowerService.includes('globoplay')) return 'bg-blue-700';
+    if (lowerService.includes('telecine')) return 'bg-yellow-600';
+    return 'bg-green-600'; // Cor padrão para outros serviços
+  };
+
+  const parseStreamingServices = (services: string) => {
+    if (!services || services === 'Não disponível') return [];
+    return services.split(',').map(s => s.trim()).slice(0, 3); // Máximo 3 serviços
   };
 
   return (
@@ -41,12 +59,41 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick }) => {
             {movie.vote_average.toFixed(1)}
           </span>
         </div>
+        
+        {/* Streaming Services Badge - Posição de destaque */}
+        <div className="absolute top-3 left-3">
+          {movie.streaming_services && movie.streaming_services !== 'Não disponível' ? (
+            <div className="flex flex-col gap-1">
+              {parseStreamingServices(movie.streaming_services).map((service, index) => (
+                <div
+                  key={index}
+                  className={`${getStreamingBadgeColor(service)} text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg`}
+                >
+                  {service}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg">
+              Não disponível
+            </div>
+          )}
+        </div>
       </div>
       
       <div className="p-4">
         <h3 className="text-white font-bold text-lg mb-2 line-clamp-2">
           {movie.title}
         </h3>
+        
+        {/* Streaming Info Destacada */}
+        <div className="mb-3 p-2 bg-slate-700 rounded-md">
+          <div className="flex items-center gap-2 text-sm">
+            <Tv className="text-blue-400" size={14} />
+            <span className="text-blue-400 font-medium">Disponível em:</span>
+          </div>
+          <p className="text-white text-sm mt-1">{movie.streaming_services || 'Informação não disponível'}</p>
+        </div>
         
         <div className="space-y-2 text-sm text-slate-300">
           <div className="flex items-center gap-2">

@@ -10,10 +10,11 @@ import DataVisualizationDashboard from './components/DataVisualizationDashboard'
 import PDFExport from './components/PDFExport';
 import AboutPage from './components/AboutPage';
 import ContactPage from './components/ContactPage';
+import SavedMovies from './components/SavedMovies';
 import FileUpload from './components/FileUpload';
 import RecommendationEngine from './components/RecommendationEngine';
 import { MovieDetails as MovieDetailsType, SearchFilters } from './types/movie';
-import { searchMoviesAndDirectors } from './services/tmdbApi';
+import { searchMoviesAndDirectors, getMovieDetails } from './services/tmdbApi';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'about' | 'contact'>('home');
@@ -52,6 +53,34 @@ function App() {
     setSelectedMovie(movie);
   };
 
+  const handleSavedMovieClick = async (movieId: number) => {
+    try {
+      const movieDetails = await getMovieDetails(movieId);
+      // Busca dados completos do filme
+      const fullMovie = {
+        id: movieId,
+        title: movieDetails.title || 'Título não disponível',
+        overview: movieDetails.overview || '',
+        poster_path: movieDetails.poster_path || null,
+        backdrop_path: movieDetails.backdrop_path || null,
+        release_date: movieDetails.release_date || '',
+        vote_average: movieDetails.vote_average || 0,
+        vote_count: movieDetails.vote_count || 0,
+        popularity: movieDetails.popularity || 0,
+        adult: movieDetails.adult || false,
+        original_language: movieDetails.original_language || '',
+        original_title: movieDetails.original_title || '',
+        video: movieDetails.video || false,
+        genre_ids: movieDetails.genre_ids || [],
+        genres: movieDetails.genres || [],
+        ...movieDetails
+      } as MovieDetailsType;
+      
+      setSelectedMovie(fullMovie);
+    } catch (error) {
+      console.error('Failed to load movie details:', error);
+    }
+  };
   const handleCloseDetails = () => {
     setSelectedMovie(null);
   };
@@ -92,13 +121,13 @@ function App() {
       <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
       
       <div className="flex">
-        <div className="w-80 bg-slate-800 border-r border-slate-700 overflow-y-auto">
+        <div className="w-80 bg-slate-800 border-r border-slate-700 overflow-y-auto h-screen">
           <SearchSidebar
             onSearch={handleSearch}
             onReset={handleReset}
             isLoading={isLoading}
           />
-          <div className="p-6 border-t border-slate-700">
+          <div className="p-6 border-t border-slate-700 mt-4">
             <FileUpload onFilesProcessed={handleFilesProcessed} />
           </div>
         </div>
@@ -221,6 +250,7 @@ function App() {
         </main>
       </div>
       
+      <SavedMovies onMovieClick={handleSavedMovieClick} />
       {selectedMovie && (
         <MovieDetails
           movie={selectedMovie}

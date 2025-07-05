@@ -110,7 +110,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onReset, isLoad
             }}
           />
           <div>
-            <h1 className="text-xl font-bold text-white">Qual Play</h1>
+            <h1 className="text-xl font-bold text-white">Busca Filmes Pro</h1>
             <p className="text-slate-400 text-sm">by Eduardo Ben-Hur</p>
           </div>
         </div>
@@ -281,7 +281,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onReset, isLoad
       <div className="space-y-3">
         <button
           onClick={handleSearch}
-          disabled={isLoading}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
           className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <Search size={20} />
@@ -289,10 +289,18 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onReset, isLoad
         </button>
 
         <button
-          onClick={handleReset}
+            className="w-full px-4 py-3 bg-slate-600 text-white rounded-md hover:bg-slate-700 transition-colors font-medium"
           className="w-full px-4 py-3 bg-slate-600 text-white rounded-md hover:bg-slate-700 transition-colors"
         >
           Nova Busca (Limpar Tudo)
+          
+          <div className="mt-4 p-3 bg-slate-700 rounded-md">
+            <p className="text-xs text-slate-400 text-center">
+              💡 <strong>Dica:</strong> Para busca mais precisa, digite o nome exato do filme.<br/>
+              🎬 <strong>Streaming:</strong> Informações destacadas nos cards para facilitar sua escolha!<br/>
+              ⚡ <strong>Performance:</strong> Filtros limitam a 20 resultados para melhor velocidade.
+            </p>
+          </div>
         </button>
       </div>
     </div>
