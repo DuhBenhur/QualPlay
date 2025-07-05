@@ -28,7 +28,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange }) =>
               }}
             />
             <Film className="text-blue-400" size={28} />
-            <span className="text-xl font-bold text-white">Qual Play</span>
+            <span className="text-xl font-bold text-white">QualPlay</span>
           </div>
 
           {/* Navigation Items */}

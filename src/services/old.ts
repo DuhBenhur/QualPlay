@@ -1,5 +1,4 @@
-import { Genre, SearchFilters, SearchResults, MovieDetails, Person } from '../types/movie';
-
+// API Key - Substitua pela sua chave do TMDB
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY || 'fallback-key';
 const BASE_URL = 'https://api.themoviedb.org/3';
 
@@ -200,8 +199,6 @@ export const getMovieDetails = async (movieId: number): Promise<MovieDetails> =>
 // Função para descobrir filmes com filtros
 export const discoverMovies = async (filters: SearchFilters): Promise<SearchResults> => {
   try {
-    console.log('🔍 Discover Movies - Filtros recebidos:', filters);
-    
     let endpoint = `/discover/movie?api_key=${API_KEY}&language=pt-BR&include_adult=false&sort_by=${filters.sortBy}`;
     
     if (filters.genres.length > 0) {
@@ -216,14 +213,13 @@ export const discoverMovies = async (filters: SearchFilters): Promise<SearchResu
       endpoint += `&region=${filters.region}`;
     }
     
-    console.log('🌐 Endpoint final:', endpoint);
+    // Buscar múltiplas páginas para ter mais variedade
     const pages = [1, 2];
     const allResults = [];
     
     for (const page of pages) {
       try {
         const data = await makeRequest(`${endpoint}&page=${page}`);
-        console.log(`📄 Página ${page}: ${data.results?.length || 0} filmes`);
         if (data.results) {
           allResults.push(...data.results);
         }
@@ -232,7 +228,6 @@ export const discoverMovies = async (filters: SearchFilters): Promise<SearchResu
       }
     }
     
-    console.log(`📊 Total de filmes brutos: ${allResults.length}`);
     // Remover duplicatas e pegar os melhores
     const uniqueMovies = Array.from(
       new Map(allResults.map(movie => [movie.id, movie])).values()
@@ -240,11 +235,11 @@ export const discoverMovies = async (filters: SearchFilters): Promise<SearchResu
     
     // Processar filmes com detalhes completos
     const moviesWithDetails = await Promise.all(
-      uniqueMovies.slice(0, 15).map(async (movie: any) => { // Reduzido para 15 para ser mais rápido
+      uniqueMovies.map(async (movie: any) => {
         try {
           return await getMovieDetails(movie.id);
         } catch (error) {
-          console.warn(`⚠️ Erro ao buscar detalhes do filme ${movie.id}:`, error);
+          console.error(`Error getting details for movie ${movie.id}:`, error);
           // Retorna dados básicos se falhar
           return {
             ...movie,
@@ -272,8 +267,6 @@ export const discoverMovies = async (filters: SearchFilters): Promise<SearchResu
       })
     );
     
-    console.log(`✅ Filmes processados com detalhes: ${moviesWithDetails.length}`);
-    
     return {
       movies: moviesWithDetails,
       totalResults: moviesWithDetails.length,
@@ -281,7 +274,7 @@ export const discoverMovies = async (filters: SearchFilters): Promise<SearchResu
       totalPages: 1
     };
   } catch (error) {
-    console.error('❌ Erro no discoverMovies:', error);
+    console.error('Error discovering movies:', error);
     return {
       movies: [],
       totalResults: 0,
@@ -442,3 +435,6 @@ export const searchMoviesAndDirectors = async (
     };
   }
 };
+
+// Importar tipos necessários
+import { Genre, SearchFilters, SearchResults, MovieDetails, Person } from '../types/movie';

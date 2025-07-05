@@ -15,7 +15,7 @@ export const emailConfig = {
 export const emailTemplate = {
   subject: '{{subject}} - Contato do Site',
   body: `
-    Nova mensagem do site Qual Play:
+    Nova mensagem do site QualPlay:
     
     Nome: {{from_name}}
     Email: {{from_email}}

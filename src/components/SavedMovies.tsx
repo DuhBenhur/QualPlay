@@ -18,14 +18,28 @@ interface SavedMovie {
 
 interface SavedMoviesProps {
   onMovieClick: (movieId: number) => void;
+  savedCount: number;
 }
 
-const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick }) => {
+const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) => {
   const [savedMovies, setSavedMovies] = useState<SavedMovie[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     loadSavedMovies();
+  }, [savedCount]); // Recarregar quando o contador mudar
+
+  useEffect(() => {
+    // Escutar mudanças nos filmes salvos
+    const handleSavedMoviesChange = () => {
+      loadSavedMovies();
+    };
+
+    window.addEventListener('savedMoviesChanged', handleSavedMoviesChange);
+
+    return () => {
+      window.removeEventListener('savedMoviesChanged', handleSavedMoviesChange);
+    };
   }, []);
 
   const loadSavedMovies = () => {
@@ -37,6 +51,9 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick }) => {
     const updated = savedMovies.filter(movie => movie.id !== movieId);
     setSavedMovies(updated);
     localStorage.setItem('savedMovies', JSON.stringify(updated));
+    
+    // Disparar evento para atualizar outros componentes
+    window.dispatchEvent(new CustomEvent('savedMoviesChanged'));
   };
 
   const formatDate = (dateString: string) => {
@@ -144,7 +161,7 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick }) => {
       pdf.setFontSize(8);
       pdf.setTextColor(148, 163, 184);
       pdf.text(`Página ${i} de ${totalPages}`, pageWidth - 30, pageHeight - 10);
-      pdf.text('Meus Filmes Salvos - Busca Filmes Pro', 20, pageHeight - 10);
+      pdf.text('Meus Filmes Salvos - QualPlay', 20, pageHeight - 10);
     }
     
     pdf.save(`meus-filmes-salvos-${new Date().toISOString().split('T')[0]}.pdf`);
@@ -157,9 +174,9 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick }) => {
         className="fixed bottom-6 right-6 bg-red-600 text-white p-3 md:p-4 rounded-full shadow-lg hover:bg-red-700 transition-colors z-40"
       >
         <Heart size={20} className="md:w-6 md:h-6" />
-        {savedMovies.length > 0 && (
+        {savedCount > 0 && (
           <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full w-5 h-5 md:w-6 md:h-6 flex items-center justify-center">
-            {savedMovies.length}
+            {savedCount}
           </span>
         )}
       </button>
@@ -277,7 +294,7 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick }) => {
                           <span>Disponível em:</span>
                         </div>
                         <p className="text-white">
-                          {movie.streaming_services === 'Não disponível' 
+                          {movie.streaming_services === 'Não disponível' || movie.streaming_services === 'N/A'
                             ? 'Não disponível' 
                             : movie.streaming_services
                           }

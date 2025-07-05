@@ -19,7 +19,7 @@ const AboutPage: React.FC = () => {
             <Film className="text-blue-400" size={48} />
           </div>
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-            Qual Play
+            QualPlay
           </h1>
           <p className="text-xl text-slate-300 max-w-2xl mx-auto">
             Uma aplicação moderna e completa para descobrir, explorar e analisar filmes com tecnologias de ponta
@@ -31,7 +31,7 @@ const AboutPage: React.FC = () => {
           <h2 className="text-2xl font-bold mb-6 text-blue-400">Sobre a Aplicação</h2>
           <div className="bg-slate-800 rounded-lg p-6 mb-6">
             <p className="text-slate-300 leading-relaxed mb-4">
-              Pense no <strong>Qual Play</strong> como seu cúmplice na hora de escolher um filme. 
+              Pense no <strong>QualPlay</strong> como seu cúmplice na hora de escolher um filme. 
               Aquele amigo que sempre tem uma boa indicação quando você manda um "não sei o que ver!". 
               Nós vasculhamos o universo de filmes e séries do The Movie Database (TMDB) 
               para trazer as melhores opções direto pra sua tela. 

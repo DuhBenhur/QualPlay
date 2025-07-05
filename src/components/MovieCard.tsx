@@ -10,12 +10,17 @@ interface MovieCardProps {
 
 const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick }) => {
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    if (!dateString) return 'Data não informada';
+    try {
+      return new Date(dateString).toLocaleDateString('pt-BR');
+    } catch {
+      return 'Data inválida';
+    }
   };
 
   const formatGenres = (genres: any[]) => {
-    if (!genres || genres.length === 0) return 'Gênero não informado';
-    return genres.map(g => g.name).join(', ');
+    if (!genres || !Array.isArray(genres) || genres.length === 0) return 'Gênero não informado';
+    return genres.map(g => g?.name || 'Desconhecido').join(', ');
   };
 
   const getStreamingBadgeColor = (service: string) => {
@@ -28,12 +33,25 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick }) => {
     if (lowerService.includes('apple')) return 'bg-gray-800';
     if (lowerService.includes('globoplay')) return 'bg-blue-700';
     if (lowerService.includes('telecine')) return 'bg-yellow-600';
-    return 'bg-green-600'; // Cor padrão para outros serviços
+    return 'bg-green-600';
   };
 
   const parseStreamingServices = (services: string) => {
-    if (!services || services === 'Não disponível') return [];
-    return services.split(',').map(s => s.trim()).slice(0, 3); // Máximo 3 serviços
+    if (!services || services === 'Não disponível' || services === 'N/A') return [];
+    return services.split(',').map(s => s.trim()).slice(0, 3);
+  };
+
+  // Garantir que os dados existem antes de renderizar
+  const safeMovie = {
+    id: movie?.id || 0,
+    title: movie?.title || 'Título não disponível',
+    overview: movie?.overview || '',
+    poster_path: movie?.poster_path || null,
+    release_date: movie?.release_date || '',
+    vote_average: movie?.vote_average || 0,
+    genres: movie?.genres || [],
+    director: movie?.director || 'Não informado',
+    streaming_services: movie?.streaming_services || 'Não disponível'
   };
 
   return (
@@ -43,8 +61,8 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick }) => {
     >
       <div className="relative">
         <img
-          src={getImageUrl(movie.poster_path)}
-          alt={movie.title}
+          src={getImageUrl(safeMovie.poster_path)}
+          alt={safeMovie.title}
           className="w-full h-80 object-cover"
           onError={(e) => {
             e.currentTarget.src = '/placeholder-movie.jpg';
@@ -56,15 +74,15 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick }) => {
         <div className="absolute top-3 right-3 bg-black bg-opacity-75 rounded-full px-2 py-1 flex items-center gap-1">
           <Star className="text-yellow-400 fill-current" size={14} />
           <span className="text-white text-sm font-medium">
-            {movie.vote_average.toFixed(1)}
+            {safeMovie.vote_average.toFixed(1)}
           </span>
         </div>
         
-        {/* Streaming Services Badge - Posição de destaque */}
+        {/* Streaming Services Badge */}
         <div className="absolute top-3 left-3">
-          {movie.streaming_services && movie.streaming_services !== 'Não disponível' ? (
+          {safeMovie.streaming_services && safeMovie.streaming_services !== 'Não disponível' && safeMovie.streaming_services !== 'N/A' ? (
             <div className="flex flex-col gap-1">
-              {parseStreamingServices(movie.streaming_services).map((service, index) => (
+              {parseStreamingServices(safeMovie.streaming_services).map((service, index) => (
                 <div
                   key={index}
                   className={`${getStreamingBadgeColor(service)} text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg`}
@@ -83,7 +101,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick }) => {
       
       <div className="p-4">
         <h3 className="text-white font-bold text-lg mb-2 line-clamp-2">
-          {movie.title}
+          {safeMovie.title}
         </h3>
         
         {/* Streaming Info Destacada */}
@@ -92,30 +110,35 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick }) => {
             <Tv className="text-blue-400" size={14} />
             <span className="text-blue-400 font-medium">Disponível em:</span>
           </div>
-          <p className="text-white text-sm mt-1">{movie.streaming_services || 'Informação não disponível'}</p>
+          <p className="text-white text-sm mt-1">
+            {safeMovie.streaming_services && safeMovie.streaming_services !== 'N/A' 
+              ? safeMovie.streaming_services 
+              : 'Não disponível'
+            }
+          </p>
         </div>
         
         <div className="space-y-2 text-sm text-slate-300">
           <div className="flex items-center gap-2">
             <Calendar size={14} />
-            <span>{formatDate(movie.release_date)}</span>
+            <span>{formatDate(safeMovie.release_date)}</span>
           </div>
           
-          {movie.director && (
+          {safeMovie.director && safeMovie.director !== 'N/A' && (
             <div className="flex items-center gap-2">
               <User size={14} />
-              <span>{movie.director}</span>
+              <span>{safeMovie.director}</span>
             </div>
           )}
           
           <div className="text-slate-400">
-            {formatGenres(movie.genres)}
+            {formatGenres(safeMovie.genres)}
           </div>
         </div>
         
-        {movie.overview && (
+        {safeMovie.overview && (
           <p className="text-slate-400 text-sm mt-3 line-clamp-3">
-            {movie.overview}
+            {safeMovie.overview}
           </p>
         )}
       </div>

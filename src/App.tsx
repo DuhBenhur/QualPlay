@@ -1,17 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Grid, List, Film } from 'lucide-react';
 import Navigation from './components/Navigation';
 import SearchSidebar from './components/SearchSidebar';
 import MovieCard from './components/MovieCard';
 import MovieTable from './components/MovieTable';
 import MovieDetails from './components/MovieDetails';
-import GenreChart from './components/GenreChart';
 import DataVisualizationDashboard from './components/DataVisualizationDashboard';
 import PDFExport from './components/PDFExport';
 import AboutPage from './components/AboutPage';
 import ContactPage from './components/ContactPage';
 import SavedMovies from './components/SavedMovies';
-import FileUpload from './components/FileUpload';
 import RecommendationEngine from './components/RecommendationEngine';
 import { MovieDetails as MovieDetailsType, SearchFilters } from './types/movie';
 import { searchMoviesAndDirectors, getMovieDetails } from './services/tmdbApi';
@@ -23,6 +21,38 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [hasSearched, setHasSearched] = useState(false);
+  const [savedMoviesCount, setSavedMoviesCount] = useState(0);
+
+  // Atualizar contador de filmes salvos
+  useEffect(() => {
+    const updateSavedCount = () => {
+      const saved = JSON.parse(localStorage.getItem('savedMovies') || '[]');
+      setSavedMoviesCount(saved.length);
+    };
+
+    // Atualizar na inicialização
+    updateSavedCount();
+
+    // Escutar mudanças no localStorage
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'savedMovies') {
+        updateSavedCount();
+      }
+    };
+
+    // Escutar evento customizado para mudanças internas
+    const handleSavedMoviesChange = () => {
+      updateSavedCount();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('savedMoviesChanged', handleSavedMoviesChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('savedMoviesChanged', handleSavedMoviesChange);
+    };
+  }, []);
 
   const handleSearch = async (
     movieNames: string[],
@@ -81,6 +111,7 @@ function App() {
       console.error('Failed to load movie details:', error);
     }
   };
+
   const handleCloseDetails = () => {
     setSelectedMovie(null);
   };
@@ -219,7 +250,7 @@ function App() {
             {!isLoading && hasSearched && movies.length === 0 && (
               <div className="text-center py-12">
                 <Film className="mx-auto text-slate-600 mb-4" size={64} />
-                <h2 className="text-xl font-semibold text-white mb-2">
+                <h2 className="text-lg md:text-xl font-semibold text-white mb-2">
                   Nenhum filme encontrado
                 </h2>
                 <p className="text-slate-400">
@@ -232,7 +263,7 @@ function App() {
               <div className="text-center py-12">
                 <Film className="mx-auto text-slate-600 mb-4" size={64} />
                 <h2 className="text-lg md:text-xl font-semibold text-white mb-2">
-                  Bem-vindo ao Busca Filmes Pro
+                  Bem-vindo ao QualPlay
                 </h2>
                 <p className="text-slate-400 mb-6 text-sm md:text-base px-4">
                   Use a barra lateral para pesquisar filmes por título, diretor ou descobrir novos filmes com filtros avançados
@@ -249,7 +280,10 @@ function App() {
         </main>
       </div>
       
-      <SavedMovies onMovieClick={handleSavedMovieClick} />
+      <SavedMovies 
+        onMovieClick={handleSavedMovieClick} 
+        savedCount={savedMoviesCount}
+      />
       {selectedMovie && (
         <MovieDetails
           movie={selectedMovie}

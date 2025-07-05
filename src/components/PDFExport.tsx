@@ -25,7 +25,7 @@ const PDFExport: React.FC<PDFExportProps> = ({ movies }) => {
     // Title
     pdf.setFontSize(22);
     pdf.setTextColor(255, 255, 255);
-    pdf.text('Qual Play - Relatório', 40, 30);
+    pdf.text('QualPlay - Relatório', 40, 30);
     
     // Subtitle
     pdf.setFontSize(10);

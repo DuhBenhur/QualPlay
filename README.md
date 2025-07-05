@@ -1,12 +1,12 @@
-# Qual Play
+# QualPlay
 
 Uma aplicação web moderna e completa para descobrir, explorar e analisar filmes utilizando a API do The Movie Database (TMDB).
 
-![Qual Play](public/seu_logo.png)
+![QualPlay](public/seu_logo.png)
 
 ## 🎬 Sobre o Projeto
 
-O **Qual Play** é uma aplicação desenvolvida em React com TypeScript que oferece uma experiência rica e intuitiva para entusiastas de cinema. A aplicação combina funcionalidades avançadas de busca, visualização de dados e uma interface moderna e responsiva.
+O **QualPlay** é uma aplicação desenvolvida em React com TypeScript que oferece uma experiência rica e intuitiva para entusiastas de cinema. A aplicação combina funcionalidades avançadas de busca, visualização de dados e uma interface moderna e responsiva.
 
 ### ✨ Principais Funcionalidades
 

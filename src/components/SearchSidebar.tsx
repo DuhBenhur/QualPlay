@@ -111,7 +111,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
             }}
           />
           <div>
-            <h1 className="text-base md:text-lg font-bold text-white">Busca Filmes Pro</h1>
+            <h1 className="text-base md:text-lg font-bold text-white">QualPlay</h1>
             <p className="text-slate-400 text-xs hidden md:block">by Eduardo Ben-Hur</p>
           </div>
         </div>
