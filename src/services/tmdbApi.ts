@@ -1,4 +1,4 @@
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY || 'fallback-key';
+const API_KEY = import.meta.env.VITE_TMDB_API_KEY || 'a2e13943c4fab8524d1a35e31b4e32bc';
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
@@ -60,7 +60,13 @@ const mapGenreIdsToNames = async (genreIds: number[]): Promise<Genre[]> => {
 };
 
 export const searchMovies = async (query: string, page: number = 1): Promise<SearchResults> => {
-  const data = await makeRequest(
+  // Busca exata primeiro
+  const exactData = await makeRequest(
+    `/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(`"${query}"`)}&page=${page}&language=pt-BR&include_adult=false`
+  );
+  
+  // Se não encontrar resultado exato, faz busca normal
+  const data = exactData.results.length > 0 ? exactData : await makeRequest(
     `/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}&page=${page}&language=pt-BR&include_adult=false`
   );
   
@@ -79,8 +85,19 @@ export const searchMovies = async (query: string, page: number = 1): Promise<Sea
     })
   );
 
+  // Ordena resultados: filmes com título exato primeiro
+  const sortedMovies = moviesWithGenres.sort((a, b) => {
+    const aExact = a.title.toLowerCase() === query.toLowerCase();
+    const bExact = b.title.toLowerCase() === query.toLowerCase();
+    
+    if (aExact && !bExact) return -1;
+    if (!aExact && bExact) return 1;
+    
+    // Se ambos são exatos ou nenhum é exato, ordena por popularidade
+    return b.popularity - a.popularity;
+  });
   return {
-    movies: moviesWithGenres,
+    movies: sortedMovies,
     totalResults: data.total_results,
     page: data.page,
     totalPages: data.total_pages
@@ -158,6 +175,9 @@ export const discoverMovies = async (filters: SearchFilters, page: number = 1): 
   endpoint += '&vote_count.gte=50'; // Mínimo de 50 votos
   endpoint += '&vote_average.gte=5.0'; // Avaliação mínima de 5.0
   
+  // Limita a 20 filmes por página para economizar requisições
+  endpoint += '&per_page=20';
+  
   const data = await makeRequest(endpoint);
   
   const moviesWithGenres = await Promise.all(
@@ -185,7 +205,7 @@ export const discoverMovies = async (filters: SearchFilters, page: number = 1): 
 
   return {
     movies: validMovies,
-    totalResults: validMovies.length,
+    totalResults: Math.min(validMovies.length, 20), // Limita a 20 para economizar
     page: data.page,
     totalPages: data.total_pages
   };

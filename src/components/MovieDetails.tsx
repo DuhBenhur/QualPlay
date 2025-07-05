@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Star, Calendar, Clock, Users, Play, Download } from 'lucide-react';
+import { X, Star, Calendar, Clock, Users, Play, Download, ExternalLink } from 'lucide-react';
 import { MovieDetails as MovieDetailsType } from '../types/movie';
 import { getImageUrl } from '../services/tmdbApi';
 
@@ -31,6 +31,33 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
     return genres.map(g => g.name).join(', ');
   };
 
+  const handleWatchTrailer = () => {
+    // Busca trailer no YouTube
+    const searchQuery = `${movie.title} ${new Date(movie.release_date).getFullYear()} trailer`;
+    const youtubeUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`;
+    window.open(youtubeUrl, '_blank');
+  };
+
+  const handleSaveMovie = () => {
+    // Salva no localStorage
+    const savedMovies = JSON.parse(localStorage.getItem('savedMovies') || '[]');
+    const isAlreadySaved = savedMovies.some((saved: any) => saved.id === movie.id);
+    
+    if (!isAlreadySaved) {
+      savedMovies.push({
+        id: movie.id,
+        title: movie.title,
+        poster_path: movie.poster_path,
+        vote_average: movie.vote_average,
+        release_date: movie.release_date,
+        savedAt: new Date().toISOString()
+      });
+      localStorage.setItem('savedMovies', JSON.stringify(savedMovies));
+      alert('Filme salvo na sua lista!');
+    } else {
+      alert('Este filme já está na sua lista!');
+    }
+  };
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
       <div className="bg-slate-800 rounded-lg max-w-4xl max-h-[90vh] overflow-y-auto w-full">
@@ -150,13 +177,26 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
               )}
               
               <div className="flex gap-3">
-                <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                <button 
+                  onClick={handleWatchTrailer}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
                   <Play size={16} />
                   Assistir Trailer
                 </button>
-                <button className="flex items-center gap-2 px-4 py-2 bg-slate-600 text-white rounded-md hover:bg-slate-700 transition-colors">
+                <button 
+                  onClick={handleSaveMovie}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                >
                   <Download size={16} />
                   Salvar
+                </button>
+                <button 
+                  onClick={() => window.open(`https://www.themoviedb.org/movie/${movie.id}`, '_blank')}
+                  className="flex items-center gap-2 px-4 py-2 bg-slate-600 text-white rounded-md hover:bg-slate-700 transition-colors"
+                >
+                  <ExternalLink size={16} />
+                  Ver no TMDB
                 </button>
               </div>
             </div>
