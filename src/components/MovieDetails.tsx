@@ -50,7 +50,11 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
         poster_path: movie.poster_path,
         vote_average: movie.vote_average,
         release_date: movie.release_date,
-        savedAt: new Date().toISOString()
+        savedAt: new Date().toISOString(),
+        streaming_services: movie.streaming_services,
+        director: movie.director,
+        genres: movie.genres?.map(g => g.name).join(', '),
+        overview: movie.overview
       });
       localStorage.setItem('savedMovies', JSON.stringify(savedMovies));
       alert('Filme salvo na sua lista!');
@@ -123,9 +127,17 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
               </div>
               
               <div className="mb-4">
-                <span className="inline-block bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
-                  {formatGenres(movie.genres)}
-                </span>
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-block bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
+                    {formatGenres(movie.genres)}
+                  </span>
+                  {movie.streaming_services && movie.streaming_services !== 'Não disponível' && (
+                    <span className="inline-block bg-green-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                      <Tv size={14} />
+                      Disponível para assistir
+                    </span>
+                  )}
+                </div>
               </div>
               
               {movie.overview && (
@@ -152,8 +164,26 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
                 
                 {movie.streaming_services && (
                   <div className="md:col-span-2">
-                    <h4 className="font-semibold text-white mb-1">Disponível em</h4>
-                    <p className="text-slate-300">{movie.streaming_services}</p>
+                    <div className="bg-slate-700 rounded-lg p-4">
+                      <h4 className="font-semibold text-white mb-3 flex items-center gap-2">
+                        <Tv className="text-green-400" size={20} />
+                        Onde Assistir
+                      </h4>
+                      {movie.streaming_services !== 'Não disponível' ? (
+                        <div className="flex flex-wrap gap-2">
+                          {movie.streaming_services.split(',').map((service, index) => (
+                            <span
+                              key={index}
+                              className="bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium"
+                            >
+                              {service.trim()}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-slate-400">Não disponível em serviços de streaming no momento</p>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

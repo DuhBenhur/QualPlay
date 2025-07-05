@@ -357,49 +357,113 @@ const DataVisualizationDashboard: React.FC<DataVisualizationDashboardProps> = ({
       {/* Gráfico de Pizza - Gêneros */}
       {activeChart === 'genres' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Gráfico de Barras Horizontais */}
           <div className="bg-slate-700 rounded-lg p-4">
             <h4 className="text-white font-semibold mb-4">Distribuição por Gênero</h4>
             <ResponsiveContainer width="100%" height={400}>
-              <PieChart>
-                <Pie
-                  data={analytics.genreData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percentage }) => `${name} (${percentage}%)`}
-                  outerRadius={120}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {analytics.genreData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                  ))}
-                </Pie>
+              <BarChart data={analytics.genreData.slice(0, 10)}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="name" stroke="#9CA3AF" angle={-45} textAnchor="end" height={80} />
+                <YAxis stroke="#9CA3AF" />
                 <Tooltip content={<CustomTooltip />} />
-              </PieChart>
+                <Bar dataKey="value" fill="#3B82F6" />
+              </BarChart>
             </ResponsiveContainer>
           </div>
 
+          {/* Composição Visual com Percentuais */}
           <div className="bg-slate-700 rounded-lg p-4">
-            <h4 className="text-white font-semibold mb-4">Ranking de Gêneros</h4>
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {analytics.genreData.map((genre, index) => (
-                <div key={genre.name} className="flex items-center justify-between p-3 bg-slate-600 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: colors[index % colors.length] }}
-                    />
-                    <span className="text-white font-medium">{genre.name}</span>
+            <h4 className="text-white font-semibold mb-4">Composição Detalhada</h4>
+            <div className="space-y-3">
+              {/* Barra de Composição Visual */}
+              <div className="w-full h-8 bg-slate-600 rounded-lg overflow-hidden flex">
+                {analytics.genreData.slice(0, 8).map((genre, index) => (
+                  <div
+                    key={genre.name}
+                    className="h-full flex items-center justify-center text-xs font-medium text-white transition-all hover:brightness-110"
+                    style={{
+                      backgroundColor: colors[index % colors.length],
+                      width: `${Math.max(parseFloat(genre.percentage), 2)}%`, // Mínimo 2% para visibilidade
+                    }}
+                    title={`${genre.name}: ${genre.percentage}%`}
+                  >
+                    {parseFloat(genre.percentage) > 8 && genre.name.substring(0, 6)}
                   </div>
-                  <div className="text-right">
-                    <div className="text-white font-bold">{genre.value}</div>
-                    <div className="text-slate-400 text-sm">{genre.percentage}%</div>
+                ))}
+                {/* Outros gêneros agrupados */}
+                {analytics.genreData.length > 8 && (
+                  <div
+                    className="h-full flex items-center justify-center text-xs font-medium text-white bg-slate-500"
+                    style={{
+                      width: `${analytics.genreData.slice(8).reduce((sum, g) => sum + parseFloat(g.percentage), 0)}%`
+                    }}
+                    title={`Outros ${analytics.genreData.length - 8} gêneros`}
+                  >
+                    Outros
                   </div>
+                )}
+              </div>
+
+              {/* Lista Detalhada com Percentuais */}
+              <div className="max-h-80 overflow-y-auto space-y-2">
+                {analytics.genreData.map((genre, index) => (
+                  <div key={genre.name} className="flex items-center justify-between p-2 bg-slate-600 rounded-lg hover:bg-slate-500 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-4 h-4 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: colors[index % colors.length] }}
+                      />
+                      <span className="text-white font-medium">{genre.name}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-white font-bold">{genre.value}</div>
+                      <div className="text-slate-400 text-sm">{genre.percentage}%</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Insights Rápidos */}
+              <div className="mt-4 p-3 bg-slate-600 rounded-lg">
+                <h5 className="text-white font-medium mb-2">📊 Insights</h5>
+                <div className="text-sm text-slate-300 space-y-1">
+                  <p>• <strong>Gênero dominante:</strong> {analytics.genreData[0]?.name} ({analytics.genreData[0]?.percentage}%)</p>
+                  <p>• <strong>Top 3 representam:</strong> {analytics.genreData.slice(0, 3).reduce((sum, g) => sum + parseFloat(g.percentage), 0).toFixed(1)}% da coleção</p>
+                  <p>• <strong>Diversidade:</strong> {analytics.genreData.length} gêneros diferentes</p>
                 </div>
-              ))}
+              </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Treemap */}
+      {activeChart === 'treemap' && (
+        <div className="bg-slate-700 rounded-lg p-4">
+          <h4 className="text-white font-semibold mb-4">Hierarquia de Gêneros</h4>
+          <ResponsiveContainer width="100%" height={500}>
+            <Treemap
+              data={analytics.treemapData}
+              dataKey="size"
+              stroke="#374151"
+              fill="#8884d8"
+            >
+              <Tooltip 
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    const data = payload[0].payload;
+                    return (
+                      <div className="bg-slate-600 p-3 rounded-lg border border-slate-500">
+                        <p className="text-white font-medium">{data.name}</p>
+                        <p className="text-blue-400">{data.size} filmes</p>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+            </Treemap>
+          </ResponsiveContainer>
         </div>
       )}
 
@@ -580,36 +644,6 @@ const DataVisualizationDashboard: React.FC<DataVisualizationDashboardProps> = ({
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Treemap */}
-      {activeChart === 'treemap' && (
-        <div className="bg-slate-700 rounded-lg p-4">
-          <h4 className="text-white font-semibold mb-4">Hierarquia de Gêneros</h4>
-          <ResponsiveContainer width="100%" height={500}>
-            <Treemap
-              data={analytics.treemapData}
-              dataKey="size"
-              stroke="#374151"
-              fill="#8884d8"
-            >
-              <Tooltip 
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    const data = payload[0].payload;
-                    return (
-                      <div className="bg-slate-600 p-3 rounded-lg border border-slate-500">
-                        <p className="text-white font-medium">{data.name}</p>
-                        <p className="text-blue-400">{data.size} filmes</p>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-            </Treemap>
-          </ResponsiveContainer>
         </div>
       )}
 

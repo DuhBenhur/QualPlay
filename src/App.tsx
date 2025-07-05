@@ -120,19 +120,18 @@ function App() {
     <div className="min-h-screen bg-slate-900">
       <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
       
-      <div className="flex">
-        <div className="w-80 bg-slate-800 border-r border-slate-700 overflow-y-auto h-screen">
+      <div className="flex flex-col md:flex-row">
+        {/* Sidebar - Full width no mobile, fixed width no desktop */}
+        <div className="w-full md:w-80 bg-slate-800 border-b md:border-r md:border-b-0 border-slate-700 overflow-y-auto h-auto md:h-screen">
           <SearchSidebar
             onSearch={handleSearch}
+            onFilesProcessed={handleFilesProcessed}
             onReset={handleReset}
             isLoading={isLoading}
           />
-          <div className="p-6 border-t border-slate-700 mt-4">
-            <FileUpload onFilesProcessed={handleFilesProcessed} />
-          </div>
         </div>
         
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-3 md:p-6">
           <div className="max-w-7xl mx-auto">
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
@@ -147,7 +146,7 @@ function App() {
                   <div className="flex items-center gap-4">
                     <PDFExport movies={movies} />
                     
-                    <div className="flex items-center gap-2">
+                    <div className="hidden md:flex items-center gap-2">
                       <button
                         onClick={() => setViewMode('grid')}
                         className={`p-2 rounded-md transition-colors ${
@@ -192,7 +191,7 @@ function App() {
                 <DataVisualizationDashboard movies={movies} />
                 
                 {viewMode === 'grid' ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-8">
                     {movies.map((movie) => (
                       <MovieCard
                         key={movie.id}
@@ -232,13 +231,13 @@ function App() {
             {!isLoading && !hasSearched && (
               <div className="text-center py-12">
                 <Film className="mx-auto text-slate-600 mb-4" size={64} />
-                <h2 className="text-xl font-semibold text-white mb-2">
+                <h2 className="text-lg md:text-xl font-semibold text-white mb-2">
                   Bem-vindo ao Busca Filmes Pro
                 </h2>
-                <p className="text-slate-400 mb-6">
+                <p className="text-slate-400 mb-6 text-sm md:text-base px-4">
                   Use a barra lateral para pesquisar filmes por título, diretor ou descobrir novos filmes com filtros avançados
                 </p>
-                <div className="max-w-2xl mx-auto">
+                <div className="max-w-2xl mx-auto px-4">
                   <RecommendationEngine 
                     watchedMovies={[]}
                     onMovieClick={handleMovieClick}

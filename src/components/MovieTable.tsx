@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Calendar, User, Eye } from 'lucide-react';
+import { Star, Calendar, User, Eye, Tv } from 'lucide-react';
 import { MovieDetails } from '../types/movie';
 import { getImageUrl } from '../services/tmdbApi';
 
@@ -16,6 +16,24 @@ const MovieTable: React.FC<MovieTableProps> = ({ movies, onMovieClick }) => {
   const formatGenres = (genres: any[]) => {
     if (!genres || genres.length === 0) return 'Gênero não informado';
     return genres.map(g => g.name).join(', ');
+  };
+
+  const getStreamingBadgeColor = (service: string) => {
+    const lowerService = service.toLowerCase();
+    if (lowerService.includes('netflix')) return 'bg-red-600';
+    if (lowerService.includes('amazon') || lowerService.includes('prime')) return 'bg-blue-600';
+    if (lowerService.includes('disney')) return 'bg-blue-800';
+    if (lowerService.includes('hbo') || lowerService.includes('max')) return 'bg-purple-600';
+    if (lowerService.includes('paramount')) return 'bg-blue-500';
+    if (lowerService.includes('apple')) return 'bg-gray-800';
+    if (lowerService.includes('globoplay')) return 'bg-blue-700';
+    if (lowerService.includes('telecine')) return 'bg-yellow-600';
+    return 'bg-green-600';
+  };
+
+  const parseStreamingServices = (services: string) => {
+    if (!services || services === 'Não disponível') return [];
+    return services.split(',').map(s => s.trim()).slice(0, 2); // Máximo 2 na tabela
   };
 
   return (
@@ -38,6 +56,9 @@ const MovieTable: React.FC<MovieTableProps> = ({ movies, onMovieClick }) => {
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
                 Diretor
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                Streaming
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
                 Avaliação
@@ -85,6 +106,25 @@ const MovieTable: React.FC<MovieTableProps> = ({ movies, onMovieClick }) => {
                   <div className="flex items-center gap-2 text-sm text-slate-300">
                     <User size={14} />
                     {movie.director || 'N/A'}
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex flex-col gap-1">
+                    {movie.streaming_services && movie.streaming_services !== 'Não disponível' ? (
+                      parseStreamingServices(movie.streaming_services).map((service, index) => (
+                        <span
+                          key={index}
+                          className={`${getStreamingBadgeColor(service)} text-white text-xs px-2 py-1 rounded-full font-medium inline-block w-fit`}
+                        >
+                          {service}
+                        </span>
+                      ))
+                    ) : (
+                      <div className="flex items-center gap-2 text-sm text-slate-400">
+                        <Tv size={14} />
+                        <span>Não disponível</span>
+                      </div>
+                    )}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
