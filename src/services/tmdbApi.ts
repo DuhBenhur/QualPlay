@@ -3,6 +3,7 @@ import { Genre, SearchFilters, SearchResults, MovieDetails, Person } from '../ty
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY || 'fallback-key';
 const BASE_URL = 'https://api.themoviedb.org/3';
 
+
 // Cache para melhorar performance
 const cache = new Map<string, any>();
 
@@ -324,7 +325,7 @@ export const searchMoviesAndDirectors = async (
       }
     }
     
-    // 🎭 BUSCAR FILMES POR DIRETOR - MUITO EXPANDIDO
+    // 🎭 BUSCAR FILMES POR DIRETOR - ALGORITMO CORRIGIDO
     for (const directorName of directorNames) {
       try {
         console.log(`Buscando diretor: ${directorName}`);
@@ -340,33 +341,66 @@ export const searchMoviesAndDirectors = async (
         
         console.log(`Encontrados ${directors.length} diretores para "${directorName}"`);
         
-        // Para cada diretor encontrado
-        for (const director of directors.slice(0, 2)) { // Máximo 2 diretores por nome
+        // Para cada diretor encontrado (máximo 2 para evitar resultados irrelevantes)
+        for (const director of directors.slice(0, 2)) {
           try {
-            // Buscar filmes do diretor com múltiplas páginas
-            const pages = [1, 2, 3]; // 3 páginas = até 60 filmes por diretor
+            console.log(`🎬 Buscando filmes do diretor: ${director.name} (ID: ${director.id})`);
             
-            for (const page of pages) {
+            // 🔍 MÉTODO 1: Discover movies com filtro de diretor (mais preciso)
+            const discoverResults = await makeRequest(
+              `/discover/movie?api_key=${API_KEY}&with_crew=${director.id}&language=pt-BR&include_adult=false&sort_by=popularity.desc&page=1`
+            );
+            
+            console.log(`📊 Discover encontrou ${discoverResults.results?.length || 0} filmes para ${director.name}`);
+            
+            // Processar filmes do discover (mais confiável)
+            if (discoverResults.results && discoverResults.results.length > 0) {
+              for (const movie of discoverResults.results.slice(0, 15)) { // Máximo 15 por diretor
+                try {
+                  const movieDetails = await getMovieDetails(movie.id);
+                  
+                  // 🎯 VALIDAÇÃO CRÍTICA: Verificar se o diretor realmente dirigiu o filme
+                  if (movieDetails.director && 
+                      movieDetails.director.toLowerCase().includes(directorName.toLowerCase().split(' ')[0])) {
+                    console.log(`✅ Filme confirmado: ${movieDetails.title} - Diretor: ${movieDetails.director}`);
+                    allMovies.push(movieDetails);
+                  } else {
+                    console.log(`❌ Filme rejeitado: ${movieDetails.title} - Diretor real: ${movieDetails.director} (buscado: ${directorName})`);
+                  }
+                } catch (error) {
+                  console.error(`Error getting details for movie ${movie.id}:`, error);
+                }
+              }
+            }
+            
+            // 🔍 MÉTODO 2: Busca adicional se poucos resultados (backup)
+            if (allMovies.filter(m => m.director?.toLowerCase().includes(directorName.toLowerCase().split(' ')[0])).length < 5) {
+              console.log(`🔄 Busca adicional para ${director.name} - poucos resultados encontrados`);
+              
               try {
-                const moviesData = await makeRequest(
-                  `/discover/movie?api_key=${API_KEY}&with_crew=${director.id}&language=pt-BR&include_adult=false&sort_by=popularity.desc&page=${page}`
+                const additionalResults = await makeRequest(
+                  `/discover/movie?api_key=${API_KEY}&with_crew=${director.id}&language=pt-BR&include_adult=false&sort_by=vote_average.desc&page=1`
                 );
                 
-                if (moviesData.results && moviesData.results.length > 0) {
-                  console.log(`Página ${page}: ${moviesData.results.length} filmes do diretor ${director.name}`);
-                  
-                  // Processar todos os filmes da página
-                  for (const movie of moviesData.results) {
+                if (additionalResults.results && additionalResults.results.length > 0) {
+                  for (const movie of additionalResults.results.slice(0, 10)) {
                     try {
                       const movieDetails = await getMovieDetails(movie.id);
-                      allMovies.push(movieDetails);
+                      
+                      // Verificação dupla para garantir que é do diretor correto
+                      if (movieDetails.director && 
+                          movieDetails.director.toLowerCase().includes(directorName.toLowerCase().split(' ')[0]) &&
+                          !allMovies.some(existing => existing.id === movieDetails.id)) {
+                        console.log(`✅ Filme adicional confirmado: ${movieDetails.title} - ${movieDetails.director}`);
+                        allMovies.push(movieDetails);
+                      }
                     } catch (error) {
                       console.error(`Error getting details for movie ${movie.id}:`, error);
                     }
                   }
                 }
               } catch (error) {
-                console.error(`Error fetching page ${page} for director ${director.name}:`, error);
+                console.error(`Error in additional search for director ${director.name}:`, error);
               }
             }
           } catch (error) {
@@ -394,8 +428,30 @@ export const searchMoviesAndDirectors = async (
     
     console.log(`Filmes únicos: ${uniqueMovies.length}`);
     
-    // Aplicar filtros
+    // 🎯 FILTRO ADICIONAL PARA DIRETORES: Se buscou por diretor, priorizar filmes do diretor
     let filteredMovies = uniqueMovies;
+    
+    if (directorNames.length > 0) {
+      const directorMovies = uniqueMovies.filter(movie => {
+        return directorNames.some(directorName => 
+          movie.director && 
+          movie.director.toLowerCase().includes(directorName.toLowerCase().split(' ')[0])
+        );
+      });
+      
+      const otherMovies = uniqueMovies.filter(movie => {
+        return !directorNames.some(directorName => 
+          movie.director && 
+          movie.director.toLowerCase().includes(directorName.toLowerCase().split(' ')[0])
+        );
+      });
+      
+      console.log(`🎬 Filmes do diretor buscado: ${directorMovies.length}`);
+      console.log(`🎬 Outros filmes: ${otherMovies.length}`);
+      
+      // Priorizar filmes do diretor, depois outros (se houver espaço)
+      filteredMovies = [...directorMovies, ...otherMovies.slice(0, Math.max(0, 50 - directorMovies.length))];
+    }
     
     if (filters.genres.length > 0) {
       filteredMovies = filteredMovies.filter(movie => 
