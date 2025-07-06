@@ -76,22 +76,24 @@ const ContactPage: React.FC = () => {
       <div className="max-w-4xl mx-auto px-6 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-6">
+           <div className="flex items-center justify-center gap-4 mb-6">
             <img 
               src="/seu_logo.png" 
               alt="Eduardo Ben-Hur Logo" 
-              className="w-16 h-16 rounded-full"
+              className="w-16 h-16 rounded-full object-cover shadow-lg"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
             />
-            <MessageSquare className="text-blue-400" size={48} />
+            <div className="flex items-center">
+              <MessageSquare className="text-blue-400" size={48} />
+            </div>
           </div>
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             Entre em Contato
           </h1>
           <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-            Tem alguma dúvida, sugestão ou feedback sobre o QualPlay? Adoraria ouvir de você!
+            Tem alguma dúvida, sugestão ou feedback sobre o Busca Filmes Pro? Adoraria ouvir de você!
           </p>
         </div>
 

@@ -22,13 +22,15 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange }) =>
             <img 
               src="/seu_logo.png" 
               alt="Eduardo Ben-Hur Logo" 
-              className="w-10 h-10 rounded-full"
+              className="w-10 h-10 rounded-full object-cover"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
             />
-            <Film className="text-blue-400" size={28} />
-            <span className="text-xl font-bold text-white">QualPlay</span>
+            <div className="flex items-center gap-3">
+              <Film className="text-blue-400" size={28} />
+              <span className="text-xl font-bold text-white">Busca Filmes Pro</span>
+            </div>
           </div>
 
           {/* Navigation Items */}

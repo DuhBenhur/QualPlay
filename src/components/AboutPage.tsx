@@ -7,19 +7,21 @@ const AboutPage: React.FC = () => {
       <div className="max-w-4xl mx-auto px-6 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-6">
+          <div className="flex items-center justify-center gap-4 mb-6">
             <img 
               src="/seu_logo.png" 
               alt="Eduardo Ben-Hur Logo" 
-              className="w-16 h-16 rounded-full"
+              className="w-16 h-16 rounded-full object-cover shadow-lg"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
             />
-            <Film className="text-blue-400" size={48} />
+            <div className="flex items-center">
+              <Film className="text-blue-400" size={48} />
+            </div>
           </div>
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-            QualPlay
+            Busca Filmes Pro
           </h1>
           <p className="text-xl text-slate-300 max-w-2xl mx-auto">
             Uma aplicação moderna e completa para descobrir, explorar e analisar filmes com tecnologias de ponta
@@ -31,11 +33,9 @@ const AboutPage: React.FC = () => {
           <h2 className="text-2xl font-bold mb-6 text-blue-400">Sobre a Aplicação</h2>
           <div className="bg-slate-800 rounded-lg p-6 mb-6">
             <p className="text-slate-300 leading-relaxed mb-4">
-              Pense no <strong>QualPlay</strong> como seu cúmplice na hora de escolher um filme. 
-              Aquele amigo que sempre tem uma boa indicação quando você manda um "não sei o que ver!". 
-              Nós vasculhamos o universo de filmes e séries do The Movie Database (TMDB) 
-              para trazer as melhores opções direto pra sua tela. 
-              Chega de briga pelo controle remoto, agora a decisão ficou fácil e rápida.
+              O <strong>Busca Filmes Pro</strong> é uma aplicação web avançada desenvolvida para entusiastas de cinema 
+              que desejam uma experiência rica e intuitiva para descobrir filmes. Utilizando a API do The Movie Database (TMDB), 
+              oferecemos acesso a uma vasta biblioteca de filmes com informações detalhadas e atualizadas.
             </p>
             <p className="text-slate-300 leading-relaxed">
               A aplicação combina funcionalidades de busca inteligente, filtros avançados, visualização de dados 
@@ -152,15 +152,13 @@ const AboutPage: React.FC = () => {
               />
               <div>
                 <h3 className="text-xl font-semibold text-white">Eduardo Ben-Hur</h3>
-                <p className="text-blue-400">Analista de Dados, entusiasta em Gen IA e curioso em tecnologias e na vida</p>
+                <p className="text-blue-400">Desenvolvedor Full Stack</p>
               </div>
             </div>
             <p className="text-slate-300 leading-relaxed">
-            Olá! Sou o Eduardo, especialista em Digital Business e Data Science com uma paixão por tecnologia, boas IPAs 🍻, sambas 🎶 e resenhas com os amigos 🗣️.
-            <br/><br/>
-            O QualPlay é um exemplo prático da minha abordagem de desenvolvimento: unir expertise humana com o poder da Inteligência Artificial. Este projeto foi construído em uma colaboração sinérgica com ferramentas de IA Generativa, que atuaram como assistentes de codificação.
-            <br/><br/>
-            Meu papel foi o de arquiteto: definindo a estrutura, guiando a implementação, garantindo a qualidade do código, coesão da experiência do usuário e constantes refinamentos da engenharia de prompt. Este é o futuro do desenvolvimento de software — uma parceria inteligente onde a visão estratégica humana potencializa a velocidade da máquina.
+              Desenvolvedor apaixonado por tecnologia e cinema, especializado em criar aplicações web modernas 
+              e funcionais. Com experiência em React, TypeScript, Python e diversas outras tecnologias, 
+              busco sempre entregar soluções elegantes e eficientes que proporcionem excelente experiência ao usuário.
             </p>
           </div>
         </div>
@@ -195,7 +193,7 @@ const AboutPage: React.FC = () => {
         {/* Footer */}
         <div className="text-center pt-8 border-t border-slate-700">
           <p className="text-slate-400">
-            © 2025 Eduardo Ben-Hur. Desenvolvido com ❤️, engenharia de prompt🤖 e muito ☕
+            © 2025 Eduardo Ben-Hur. Desenvolvido com ❤️ e muito ☕
           </p>
           <p className="text-slate-500 text-sm mt-2">
             Dados fornecidos por The Movie Database (TMDB)

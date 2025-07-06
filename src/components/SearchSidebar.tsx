@@ -105,13 +105,13 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
           <img 
             src="/seu_logo.png" 
             alt="Eduardo Ben-Hur Logo" 
-            className="w-6 h-6 md:w-8 md:h-8 rounded-full"
+            className="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover"
             onError={(e) => {
               e.currentTarget.style.display = 'none';
             }}
           />
-          <div>
-            <h1 className="text-base md:text-lg font-bold text-white">QualPlay</h1>
+          <div className="flex flex-col justify-center">
+            <h1 className="text-base md:text-lg font-bold text-white">Busca Filmes Pro</h1>
             <p className="text-slate-400 text-xs hidden md:block">by Eduardo Ben-Hur</p>
           </div>
         </div>
