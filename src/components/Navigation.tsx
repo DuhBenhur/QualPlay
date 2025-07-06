@@ -29,7 +29,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange }) =>
             />
             <div className="flex items-center gap-3">
               <Film className="text-blue-400" size={28} />
-              <span className="text-xl font-bold text-white">Busca Filmes Pro</span>
+              <span className="text-xl font-bold text-white">QualPlay</span>
             </div>
           </div>
 

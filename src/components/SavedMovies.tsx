@@ -269,7 +269,7 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
       pdf.setFontSize(8);
       pdf.setTextColor(148, 163, 184);
       pdf.text(`Página ${i} de ${totalPages}`, pageWidth - 30, pageHeight - 10);
-      pdf.text('Lista Personalizada - Busca Filmes Pro', 20, pageHeight - 10);
+      pdf.text('Lista Personalizada - QualPlay', 20, pageHeight - 10);
     }
     
     pdf.save(`minha-lista-filmes-${new Date().toISOString().split('T')[0]}.pdf`);
