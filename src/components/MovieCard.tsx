@@ -106,6 +106,46 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, onFavoriteToggle 
     return services.split(',').map(s => s.trim()).slice(0, 3);
   };
 
+  const getStreamingUrl = (service: string, movieTitle: string) => {
+    const lowerService = service.toLowerCase();
+    const searchQuery = encodeURIComponent(movieTitle);
+    
+    // URLs diretas para os serviços de streaming
+    if (lowerService.includes('netflix')) {
+      return `https://www.netflix.com/search?q=${searchQuery}`;
+    }
+    if (lowerService.includes('amazon') || lowerService.includes('prime')) {
+      return `https://www.primevideo.com/search/ref=atv_nb_sr?phrase=${searchQuery}`;
+    }
+    if (lowerService.includes('disney')) {
+      return `https://www.disneyplus.com/search?q=${searchQuery}`;
+    }
+    if (lowerService.includes('hbo') || lowerService.includes('max')) {
+      return `https://play.max.com/search?q=${searchQuery}`;
+    }
+    if (lowerService.includes('paramount')) {
+      return `https://www.paramountplus.com/search/?query=${searchQuery}`;
+    }
+    if (lowerService.includes('apple')) {
+      return `https://tv.apple.com/search?term=${searchQuery}`;
+    }
+    if (lowerService.includes('globoplay')) {
+      return `https://globoplay.globo.com/busca/?q=${searchQuery}`;
+    }
+    if (lowerService.includes('telecine')) {
+      return `https://telecineplay.com.br/busca?q=${searchQuery}`;
+    }
+    
+    // Fallback: busca no Google
+    return `https://www.google.com/search?q=${searchQuery}+${encodeURIComponent(service)}+assistir+online`;
+  };
+
+  const handleStreamingClick = (e: React.MouseEvent, service: string) => {
+    e.stopPropagation(); // Evita abrir o modal do filme
+    const url = getStreamingUrl(service, safeMovie.title);
+    window.open(url, '_blank');
+  };
+
   // Garantir que os dados existem antes de renderizar
   const safeMovie = {
     id: movie?.id || 0,
@@ -164,16 +204,20 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, onFavoriteToggle 
           {safeMovie.streaming_services && safeMovie.streaming_services !== 'Não disponível' && safeMovie.streaming_services !== 'N/A' ? (
             <div className="flex flex-col gap-1">
               {parseStreamingServices(safeMovie.streaming_services).map((service, index) => (
-                <div
+                <button
                   key={index}
-                  className={`${getStreamingBadgeColor(service)} text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg`}
+                  onClick={(e) => handleStreamingClick(e, service)}
+                  className={`${getStreamingBadgeColor(service)} text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-200 cursor-pointer border border-white/20 hover:border-white/40`}
+                  title={`Assistir no ${service}`}
                 >
-                  {service}
-                </div>
+                  <span className="flex items-center gap-1">
+                    🎬 {service}
+                  </span>
+                </button>
               ))}
             </div>
           ) : (
-            <div className="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg">
+            <div className="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg opacity-60">
               Não disponível
             </div>
           )}
@@ -191,12 +235,22 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, onFavoriteToggle 
             <Tv className="text-blue-400" size={14} />
             <span className="text-blue-400 font-medium">Disponível em:</span>
           </div>
-          <p className="text-white text-sm mt-1">
-            {safeMovie.streaming_services && safeMovie.streaming_services !== 'N/A' 
-              ? safeMovie.streaming_services 
-              : 'Não disponível'
-            }
-          </p>
+          {safeMovie.streaming_services && safeMovie.streaming_services !== 'N/A' && safeMovie.streaming_services !== 'Não disponível' ? (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {parseStreamingServices(safeMovie.streaming_services).map((service, index) => (
+                <button
+                  key={index}
+                  onClick={(e) => handleStreamingClick(e, service)}
+                  className={`${getStreamingBadgeColor(service)} text-white text-xs px-2 py-1 rounded font-medium hover:scale-105 transition-transform cursor-pointer`}
+                  title={`Assistir no ${service}`}
+                >
+                  {service}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="text-slate-400 text-sm mt-1">Não disponível</p>
+          )}
         </div>
         
         <div className="space-y-2 text-sm text-slate-300">

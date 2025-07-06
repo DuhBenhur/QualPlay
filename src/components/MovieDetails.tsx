@@ -38,6 +38,43 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
     return genres.map(g => g?.name || 'Desconhecido').join(', ');
   };
 
+  const getStreamingUrl = (service: string, movieTitle: string) => {
+    const lowerService = service.toLowerCase();
+    const searchQuery = encodeURIComponent(movieTitle);
+    
+    if (lowerService.includes('netflix')) {
+      return `https://www.netflix.com/search?q=${searchQuery}`;
+    }
+    if (lowerService.includes('amazon') || lowerService.includes('prime')) {
+      return `https://www.primevideo.com/search/ref=atv_nb_sr?phrase=${searchQuery}`;
+    }
+    if (lowerService.includes('disney')) {
+      return `https://www.disneyplus.com/search?q=${searchQuery}`;
+    }
+    if (lowerService.includes('hbo') || lowerService.includes('max')) {
+      return `https://play.max.com/search?q=${searchQuery}`;
+    }
+    if (lowerService.includes('paramount')) {
+      return `https://www.paramountplus.com/search/?query=${searchQuery}`;
+    }
+    if (lowerService.includes('apple')) {
+      return `https://tv.apple.com/search?term=${searchQuery}`;
+    }
+    if (lowerService.includes('globoplay')) {
+      return `https://globoplay.globo.com/busca/?q=${searchQuery}`;
+    }
+    if (lowerService.includes('telecine')) {
+      return `https://telecineplay.com.br/busca?q=${searchQuery}`;
+    }
+    
+    return `https://www.google.com/search?q=${searchQuery}+${encodeURIComponent(service)}+assistir+online`;
+  };
+
+  const handleStreamingClick = (service: string) => {
+    const url = getStreamingUrl(service, safeMovie.title);
+    window.open(url, '_blank');
+  };
+
   const handleWatchTrailer = () => {
     const searchQuery = `${movie.title} ${new Date(movie.release_date).getFullYear()} trailer`;
     const youtubeUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`;
@@ -202,18 +239,24 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
                         Onde Assistir
                       </h4>
                       {safeMovie.streaming_services !== 'Não disponível' && safeMovie.streaming_services !== 'N/A' ? (
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-3">
                           {safeMovie.streaming_services.split(',').map((service, index) => (
-                            <span
+                            <button
                               key={index}
-                              className="bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium"
+                              onClick={() => handleStreamingClick(service.trim())}
+                              className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 hover:shadow-lg border border-green-500/30 hover:border-green-400 flex items-center gap-2"
+                              title={`Assistir ${safeMovie.title} no ${service.trim()}`}
                             >
-                              {service.trim()}
-                            </span>
+                              <span className="text-lg">🎬</span>
+                              <span>{service.trim()}</span>
+                              <span className="text-xs opacity-75">→</span>
+                            </button>
                           ))}
                         </div>
                       ) : (
-                        <p className="text-slate-400">Não disponível em serviços de streaming</p>
+                        <div className="bg-slate-600 text-slate-400 px-4 py-3 rounded-lg text-sm">
+                          📺 Não disponível em serviços de streaming
+                        </div>
                       )}
                     </div>
                   </div>

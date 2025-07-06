@@ -1,14 +1,14 @@
 import React from 'react';
-import { Star, Calendar, User, Play, Tv } from 'lucide-react';
+import { Star, Calendar, User, Eye, Tv } from 'lucide-react';
 import { MovieDetails } from '../types/movie';
 import { getImageUrl } from '../services/tmdbApi';
 
-interface MovieCardProps {
-  movie: MovieDetails;
-  onClick: () => void;
+interface MovieTableProps {
+  movies: MovieDetails[];
+  onMovieClick: (movie: MovieDetails) => void;
 }
 
-const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick }) => {
+const MovieTable: React.FC<MovieTableProps> = ({ movies, onMovieClick }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
@@ -28,99 +28,169 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick }) => {
     if (lowerService.includes('apple')) return 'bg-gray-800';
     if (lowerService.includes('globoplay')) return 'bg-blue-700';
     if (lowerService.includes('telecine')) return 'bg-yellow-600';
-    return 'bg-green-600'; // Cor padrão para outros serviços
+    return 'bg-green-600';
   };
 
   const parseStreamingServices = (services: string) => {
     if (!services || services === 'Não disponível') return [];
-    return services.split(',').map(s => s.trim()).slice(0, 3); // Máximo 3 serviços
+    return services.split(',').map(s => s.trim()).slice(0, 2); // Máximo 2 na tabela
+  };
+
+  const getStreamingUrl = (service: string, movieTitle: string) => {
+    const lowerService = service.toLowerCase();
+    const searchQuery = encodeURIComponent(movieTitle);
+    
+    if (lowerService.includes('netflix')) {
+      return `https://www.netflix.com/search?q=${searchQuery}`;
+    }
+    if (lowerService.includes('amazon') || lowerService.includes('prime')) {
+      return `https://www.primevideo.com/search/ref=atv_nb_sr?phrase=${searchQuery}`;
+    }
+    if (lowerService.includes('disney')) {
+      return `https://www.disneyplus.com/search?q=${searchQuery}`;
+    }
+    if (lowerService.includes('hbo') || lowerService.includes('max')) {
+      return `https://play.max.com/search?q=${searchQuery}`;
+    }
+    if (lowerService.includes('paramount')) {
+      return `https://www.paramountplus.com/search/?query=${searchQuery}`;
+    }
+    if (lowerService.includes('apple')) {
+      return `https://tv.apple.com/search?term=${searchQuery}`;
+    }
+    if (lowerService.includes('globoplay')) {
+      return `https://globoplay.globo.com/busca/?q=${searchQuery}`;
+    }
+    if (lowerService.includes('telecine')) {
+      return `https://telecineplay.com.br/busca?q=${searchQuery}`;
+    }
+    
+    return `https://www.google.com/search?q=${searchQuery}+${encodeURIComponent(service)}+assistir+online`;
+  };
+
+  const handleStreamingClick = (e: React.MouseEvent, service: string, movieTitle: string) => {
+    e.stopPropagation();
+    const url = getStreamingUrl(service, movieTitle);
+    window.open(url, '_blank');
   };
 
   return (
-    <div
-      onClick={onClick}
-      className="bg-slate-800 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group hover:scale-105"
-    >
-      <div className="relative">
-        <img
-          src={getImageUrl(movie.poster_path)}
-          alt={movie.title}
-          className="w-full h-80 object-cover"
-          onError={(e) => {
-            e.currentTarget.src = '/placeholder-movie.jpg';
-          }}
-        />
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-70 transition-all duration-300 flex items-center justify-center">
-          <Play className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" size={48} />
-        </div>
-        <div className="absolute top-3 right-3 bg-black bg-opacity-75 rounded-full px-2 py-1 flex items-center gap-1">
-          <Star className="text-yellow-400 fill-current" size={14} />
-          <span className="text-white text-sm font-medium">
-            {movie.vote_average.toFixed(1)}
-          </span>
-        </div>
-        
-        {/* Streaming Services Badge - Posição de destaque */}
-        <div className="absolute top-3 left-3">
-          {movie.streaming_services && movie.streaming_services !== 'Não disponível' ? (
-            <div className="flex flex-col gap-1">
-              {parseStreamingServices(movie.streaming_services).map((service, index) => (
-                <div
-                  key={index}
-                  className={`${getStreamingBadgeColor(service)} text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg`}
-                >
-                  {service}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg">
-              Não disponível
-            </div>
-          )}
-        </div>
-      </div>
-      
-      <div className="p-4">
-        <h3 className="text-white font-bold text-lg mb-2 line-clamp-2">
-          {movie.title}
-        </h3>
-        
-        {/* Streaming Info Destacada */}
-        <div className="mb-3 p-2 bg-slate-700 rounded-md">
-          <div className="flex items-center gap-2 text-sm">
-            <Tv className="text-blue-400" size={14} />
-            <span className="text-blue-400 font-medium">Disponível em:</span>
-          </div>
-          <p className="text-white text-sm mt-1">{movie.streaming_services || 'Informação não disponível'}</p>
-        </div>
-        
-        <div className="space-y-2 text-sm text-slate-300">
-          <div className="flex items-center gap-2">
-            <Calendar size={14} />
-            <span>{formatDate(movie.release_date)}</span>
-          </div>
-          
-          {movie.director && (
-            <div className="flex items-center gap-2">
-              <User size={14} />
-              <span>{movie.director === 'N/A' ? 'Não informado' : movie.director}</span>
-            </div>
-          )}
-          
-          <div className="text-slate-400">
-            {formatGenres(movie.genres)}
-          </div>
-        </div>
-        
-        {movie.overview && (
-          <p className="text-slate-400 text-sm mt-3 line-clamp-3">
-            {movie.overview}
-          </p>
-        )}
+    <div className="bg-slate-800 rounded-lg overflow-hidden shadow-lg">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-slate-700">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                Pôster
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                Filme
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                Ano
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                Gênero
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                Diretor
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                Streaming
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                Avaliação
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                Ações
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-700">
+            {movies.map((movie) => (
+              <tr key={movie.id} className="hover:bg-slate-700 transition-colors">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <img
+                    src={getImageUrl(movie.poster_path)}
+                    alt={movie.title}
+                    className="w-16 h-24 object-cover rounded-md"
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder-movie.jpg';
+                    }}
+                  />
+                </td>
+                <td className="px-6 py-4">
+                  <div className="text-sm font-medium text-white">
+                    {movie.title}
+                  </div>
+                  {movie.overview && (
+                    <div className="text-sm text-slate-400 mt-1 line-clamp-2">
+                      {movie.overview}
+                    </div>
+                  )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center gap-2 text-sm text-slate-300">
+                    <Calendar size={14} />
+                    {formatDate(movie.release_date)}
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="text-sm text-slate-300">
+                    {formatGenres(movie.genres)}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center gap-2 text-sm text-slate-300">
+                    <User size={14} />
+                    {movie.director || 'Não informado'}
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex flex-col gap-1">
+                    {movie.streaming_services && movie.streaming_services !== 'Não disponível' ? (
+                      parseStreamingServices(movie.streaming_services).map((service, index) => (
+                        <button
+                          key={index}
+                          onClick={(e) => handleStreamingClick(e, service, movie.title)}
+                          className={`${getStreamingBadgeColor(service)} text-white text-xs px-2 py-1 rounded-full font-medium inline-block w-fit hover:scale-105 transition-transform cursor-pointer border border-white/20 hover:border-white/40`}
+                          title={`Assistir ${movie.title} no ${service}`}
+                        >
+                          🎬 {service}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="flex items-center gap-2 text-sm text-slate-400">
+                        <Tv size={14} />
+                        <span>Não disponível</span>
+                      </div>
+                    )}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center gap-1">
+                    <Star className="text-yellow-400 fill-current" size={16} />
+                    <span className="text-white font-medium text-sm">
+                      {movie.vote_average.toFixed(1)}
+                    </span>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <button
+                    onClick={() => onMovieClick(movie)}
+                    className="flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    <Eye size={14} />
+                    Detalhes
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
 };
 
-export default MovieCard;
+export default MovieTable;

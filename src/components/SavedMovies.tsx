@@ -147,6 +147,44 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
     return services.split(',').map(s => s.trim()).slice(0, 2);
   };
 
+  const getStreamingUrl = (service: string, movieTitle: string) => {
+    const lowerService = service.toLowerCase();
+    const searchQuery = encodeURIComponent(movieTitle);
+    
+    if (lowerService.includes('netflix')) {
+      return `https://www.netflix.com/search?q=${searchQuery}`;
+    }
+    if (lowerService.includes('amazon') || lowerService.includes('prime')) {
+      return `https://www.primevideo.com/search/ref=atv_nb_sr?phrase=${searchQuery}`;
+    }
+    if (lowerService.includes('disney')) {
+      return `https://www.disneyplus.com/search?q=${searchQuery}`;
+    }
+    if (lowerService.includes('hbo') || lowerService.includes('max')) {
+      return `https://play.max.com/search?q=${searchQuery}`;
+    }
+    if (lowerService.includes('paramount')) {
+      return `https://www.paramountplus.com/search/?query=${searchQuery}`;
+    }
+    if (lowerService.includes('apple')) {
+      return `https://tv.apple.com/search?term=${searchQuery}`;
+    }
+    if (lowerService.includes('globoplay')) {
+      return `https://globoplay.globo.com/busca/?q=${searchQuery}`;
+    }
+    if (lowerService.includes('telecine')) {
+      return `https://telecineplay.com.br/busca?q=${searchQuery}`;
+    }
+    
+    return `https://www.google.com/search?q=${searchQuery}+${encodeURIComponent(service)}+assistir+online`;
+  };
+
+  const handleStreamingClick = (e: React.MouseEvent, service: string, movieTitle: string) => {
+    e.stopPropagation();
+    const url = getStreamingUrl(service, movieTitle);
+    window.open(url, '_blank');
+  };
+
   const generateSavedMoviesPDF = () => {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -368,12 +406,14 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
                             <div className="mb-2">
                               <div className="flex flex-wrap gap-1">
                                 {parseStreamingServices(movie.streaming_services).map((service, serviceIndex) => (
-                                  <span
+                                  <button
                                     key={serviceIndex}
-                                    className={`${getStreamingBadgeColor(service)} text-white text-xs px-2 py-1 rounded-full`}
+                                    onClick={(e) => handleStreamingClick(e, service, movie.title)}
+                                    className={`${getStreamingBadgeColor(service)} text-white text-xs px-2 py-1 rounded-full hover:scale-105 transition-transform cursor-pointer`}
+                                    title={`Assistir ${movie.title} no ${service}`}
                                   >
-                                    {service}
-                                  </span>
+                                    🎬 {service}
+                                  </button>
                                 ))}
                               </div>
                             </div>
@@ -464,12 +504,14 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
                           {movie.streaming_services && movie.streaming_services !== 'Não disponível' ? (
                             <div className="flex flex-col gap-1">
                               {parseStreamingServices(movie.streaming_services).map((service, serviceIndex) => (
-                                <div
+                                <button
                                   key={serviceIndex}
-                                  className={`${getStreamingBadgeColor(service)} text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg`}
+                                  onClick={(e) => handleStreamingClick(e, service, movie.title)}
+                                  className={`${getStreamingBadgeColor(service)} text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-200 cursor-pointer border border-white/20 hover:border-white/40`}
+                                  title={`Assistir ${movie.title} no ${service}`}
                                 >
-                                  {service}
-                                </div>
+                                  🎬 {service}
+                                </button>
                               ))}
                             </div>
                           ) : (
@@ -510,12 +552,22 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
                               <Tv size={12} />
                               <span>Disponível em:</span>
                             </div>
-                            <p className="text-white">
-                              {movie.streaming_services === 'Não disponível' || movie.streaming_services === 'N/A'
-                                ? 'Não disponível' 
-                                : movie.streaming_services
-                              }
-                            </p>
+                            {movie.streaming_services === 'Não disponível' || movie.streaming_services === 'N/A' ? (
+                              <p className="text-slate-400">Não disponível</p>
+                            ) : (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {parseStreamingServices(movie.streaming_services).map((service, serviceIndex) => (
+                                  <button
+                                    key={serviceIndex}
+                                    onClick={(e) => handleStreamingClick(e, service, movie.title)}
+                                    className={`${getStreamingBadgeColor(service)} text-white text-xs px-2 py-1 rounded hover:scale-105 transition-transform cursor-pointer`}
+                                    title={`Assistir ${movie.title} no ${service}`}
+                                  >
+                                    {service}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         )}
                         
