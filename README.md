@@ -1,11 +1,31 @@
 # QualPlay
 
-Uma aplicação web moderna e completa para descobrir, explorar e analisar filmes utilizando a API do The Movie Database (TMDB).
+Uma aplicação web moderna e completa para descobrir, explorar e analisar filmes, nascida de um experimento em Python e evoluída para uma arquitetura robusta com o auxílio de Inteligência Artificial.
 
 ![QualPlay](public/seu_logo.png)
 
-## 🎬 Sobre o Projeto
+## 📖 A História do Projeto: Uma Jornada de Ideias e IA
 
+O **QualPlay** é mais do que um buscador de filmes; é o resultado de uma jornada de colaboração, aprendizado e da sinergia entre a inteligência humana e a artificial.
+
+### O Início: A Prova de Conceito em Python
+
+Tudo começou com uma conversa no WhatsApp com o amigo **Caio Azevedo**, que explorava o uso de IA Generativa para criar um buscador de filmes. Após uma troca de ideias sobre engenharia de prompt, o que era um desafio se tornou um protótipo funcional:
+
+-   **Em 20 minutos:** Uma primeira versão rodava no terminal, validando a lógica principal.
+-   **Em 1 hora:** Uma interface gráfica básica, construída com **Python e Streamlit**, já estava no ar.
+
+Essa Prova de Conceito (POC) inicial, embora simples, provou o potencial da ideia e serviu como a semente para algo maior. O projeto, no entanto, precisava de uma arquitetura mais escalável para ir além do protótipo e ficou em maturação por um tempo.
+
+### A Evolução: A Virada de Chave com IA
+
+Meses depois, em uma conversa com o amigo engenheiro de dados **Cezar Peixeiro**, a chave para a evolução do projeto foi descoberta: a plataforma **bolt.new**.
+
+**Bolt** é um agente de desenvolvimento web baseado em IA que opera diretamente no navegador. Ele permite construir aplicações full-stack através de um ambiente de chat, onde o desenvolvedor guia a IA para gerar e modificar o código em tempo real.
+
+Com o uso intensivo de engenharia de prompt e múltiplos refinamentos no `bolt.new`, foi possível realizar uma transformação completa na aplicação: **migrar de uma arquitetura baseada em Python/Streamlit para uma solução full-stack moderna com React, TypeScript e Vite.**
+
+O resultado é a aplicação robusta e cheia de funcionalidades que você vê hoje, um testemunho do poder da IA quando utilizada como uma ferramenta para acelerar o aprendizado e o desenvolvimento.
 O **QualPlay** é uma aplicação desenvolvida em React com TypeScript que oferece uma experiência rica e intuitiva para entusiastas de cinema. A aplicação combina funcionalidades avançadas de busca, visualização de dados e uma interface moderna e responsiva, proporcionando uma experiência completa para descobrir e analisar filmes.
 
 ### ✨ Principais Funcionalidades
@@ -253,7 +273,12 @@ xl: 1280px+   /* Desktop grande */
 - **Pesquisador em GenAI**, com foco na aplicação de IA para acelerar e otimizar o desenvolvimento de software.
 
 ### 🌟 Sobre Este Projeto
-Este é meu primeiro projeto completo em React + TypeScript, desenvolvido como parte da minha pesquisa sobre GenAI e novas estruturas de desenvolvimento web. O projeto demonstra:
+A evolução do QualPlay pode ser vista em suas duas principais fases arquitetônicas.
+#### Fase 1: A Prova de Conceito (POC) em Python
+A versão inicial foi construída para ser rápida e funcional, utilizando **Python**, **Streamlit** e a biblioteca `requests`. O objetivo era validar a ideia central com o mínimo de esforço.
+
+#### Fase 2: A Arquitetura Final Assistida por IA
+A versão atual foi completamente reescrita com o auxílio do `bolt.new`, focando em escalabilidade, performance e uma experiência de usuário moderna, utilizando **React**, **TypeScript** e **Vite**.
 
 - **Arquitetura escalável** com componentes reutilizáveis
 - **Integração com APIs** externas (TMDB)
@@ -329,4 +354,6 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 **Desenvolvido com ❤️ e muito ☕ por Eduardo Ben-Hur**
 
-*"Primeiro projeto React + TypeScript - Uma jornada de aprendizado e descoberta!"*
+*"Primeiro projeto React + TypeScript + IA Generativa - Uma jornada de aprendizado e descoberta!"*
+
+

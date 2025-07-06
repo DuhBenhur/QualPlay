@@ -156,10 +156,11 @@ const AboutPage: React.FC = () => {
               </div>
             </div>
             <p className="text-slate-300 leading-relaxed">
-              E aí! Sou especialista em Digital Business e Data Science pela USP ESALQ, o que na prática significa que sei usar planilhas chiques e convencer robôs a melhorarem o meu trabalho.
-              Prova disso é este projeto, quase inteiramente concebido por uma Inteligência Artificial (Com muito refninamento café e engenharia de prompt) enquanto eu cuidava de tarefas mais importantes, como otimizar a refrigeração do meu PC gamer, encontrar a playlist de samba perfeita e testar a densidade de novas cervejas artesanais.
-              Basicamente, sou só o gerente da IA. Um gerente que sabe fazer perguntas, gosta de hardware, samba e cerveja. Bem-vindo(a)!
-              
+            Olá! Sou o Eduardo, especialista em Digital Business e Data Science com uma paixão por tecnologia, boas IPAs 🍻, sambas 🎶 e resenhas com os amigos 🗣️.
+            <br/><br/>
+            O QualPlay é um exemplo prático da minha abordagem de desenvolvimento: unir expertise humana com o poder da Inteligência Artificial. Este projeto foi construído em uma colaboração sinérgica com ferramentas de IA Generativa, que atuaram como assistentes de codificação.
+            <br/><br/>
+            Meu papel foi o de arquiteto: definindo a estrutura, guiando a implementação, garantindo a qualidade do código, coesão da experiência do usuário e constantes refinamentos da engenharia de prompt. Este é o futuro do desenvolvimento de software — uma parceria inteligente onde a visão estratégica humana potencializa a velocidade da máquina.
             </p>
           </div>
         </div>
