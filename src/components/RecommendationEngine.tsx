@@ -355,6 +355,9 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
                 key={movie.id}
                 movie={movie}
                 onClick={() => onMovieClick(movie)}
+                onFavoriteToggle={(movie) => {
+                  console.log(`Recomendação ${movie.title} favoritada!`);
+                }}
               />
             ))}
           </div>

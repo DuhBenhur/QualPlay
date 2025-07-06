@@ -1,14 +1,79 @@
 import React from 'react';
-import { Star, Calendar, User, Play, Tv } from 'lucide-react';
+import { Star, Calendar, User, Play, Tv, Heart } from 'lucide-react';
 import { MovieDetails } from '../types/movie';
 import { getImageUrl } from '../services/tmdbApi';
 
 interface MovieCardProps {
   movie: MovieDetails;
   onClick: () => void;
+  onFavoriteToggle?: (movie: MovieDetails) => void;
 }
 
-const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick }) => {
+const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, onFavoriteToggle }) => {
+  const [isFavorite, setIsFavorite] = React.useState(false);
+
+  // Verificar se o filme está nos favoritos
+  React.useEffect(() => {
+    const savedMovies = JSON.parse(localStorage.getItem('savedMovies') || '[]');
+    const isMovieSaved = savedMovies.some((saved: any) => saved.id === movie.id);
+    setIsFavorite(isMovieSaved);
+  }, [movie.id]);
+
+  // Escutar mudanças nos favoritos
+  React.useEffect(() => {
+    const handleSavedMoviesChange = () => {
+      const savedMovies = JSON.parse(localStorage.getItem('savedMovies') || '[]');
+      const isMovieSaved = savedMovies.some((saved: any) => saved.id === movie.id);
+      setIsFavorite(isMovieSaved);
+    };
+
+    window.addEventListener('savedMoviesChanged', handleSavedMoviesChange);
+    return () => window.removeEventListener('savedMoviesChanged', handleSavedMoviesChange);
+  }, [movie.id]);
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Evita abrir o modal
+    
+    try {
+      const savedMovies = JSON.parse(localStorage.getItem('savedMovies') || '[]');
+      
+      if (isFavorite) {
+        // Remover dos favoritos
+        const updatedMovies = savedMovies.filter((saved: any) => saved.id !== movie.id);
+        localStorage.setItem('savedMovies', JSON.stringify(updatedMovies));
+        setIsFavorite(false);
+      } else {
+        // Adicionar aos favoritos
+        const movieToSave = {
+          id: movie.id,
+          title: movie.title || 'Título não disponível',
+          poster_path: movie.poster_path || null,
+          vote_average: movie.vote_average || 0,
+          release_date: movie.release_date || '',
+          savedAt: new Date().toISOString(),
+          streaming_services: movie.streaming_services && movie.streaming_services !== 'N/A' ? movie.streaming_services : 'Não disponível',
+          director: movie.director && movie.director !== 'N/A' ? movie.director : 'Não informado',
+          genres: movie.genres && Array.isArray(movie.genres) ? movie.genres.map(g => g.name).join(', ') : 'Não informado',
+          overview: movie.overview || ''
+        };
+        
+        savedMovies.push(movieToSave);
+        localStorage.setItem('savedMovies', JSON.stringify(savedMovies));
+        setIsFavorite(true);
+      }
+      
+      // Disparar evento para atualizar outros componentes
+      window.dispatchEvent(new CustomEvent('savedMoviesChanged'));
+      
+      // Callback opcional
+      if (onFavoriteToggle) {
+        onFavoriteToggle(movie);
+      }
+    } catch (error) {
+      console.error('Erro ao gerenciar favorito:', error);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     if (!dateString) return 'Data não informada';
     try {
@@ -78,8 +143,24 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick }) => {
           </span>
         </div>
         
+        {/* Botão de Favorito */}
+        <button
+          onClick={handleFavoriteClick}
+          className="absolute top-3 left-3 bg-black bg-opacity-75 rounded-full p-2 hover:bg-opacity-90 transition-all duration-200 group"
+          title={isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+        >
+          <Heart 
+            size={16} 
+            className={`transition-all duration-200 ${
+              isFavorite 
+                ? 'text-red-500 fill-red-500 scale-110' 
+                : 'text-white hover:text-red-400 group-hover:scale-110'
+            }`}
+          />
+        </button>
+        
         {/* Streaming Services Badge */}
-        <div className="absolute top-3 left-3">
+        <div className="absolute top-16 left-3">
           {safeMovie.streaming_services && safeMovie.streaming_services !== 'Não disponível' && safeMovie.streaming_services !== 'N/A' ? (
             <div className="flex flex-col gap-1">
               {parseStreamingServices(safeMovie.streaming_services).map((service, index) => (
