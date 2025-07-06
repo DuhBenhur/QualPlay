@@ -304,7 +304,7 @@ const ContactPage: React.FC = () => {
             Respondo todas as mensagens em até 48 horas 📱
           </p>
           <p className="text-slate-500 text-sm mt-2">
-            © 2025 Eduardo Ben-Hur - Qual Play?
+            © 2025 Eduardo Ben-Hur - QualPlay?
           </p>
         </div>
       </div>
