@@ -13,28 +13,35 @@ const PDFExport: React.FC<PDFExportProps> = ({ movies }) => {
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
     
-    // Logo/Header
+    // Header mais compacto
     pdf.setFillColor(15, 23, 42); // slate-900
-    pdf.rect(0, 0, pageWidth, 60, 'F');
+    pdf.rect(0, 0, pageWidth, 45, 'F');
     
-    // Title
-    pdf.setFontSize(22);
+    // Logo QualPlay mais próximo
+    pdf.setTextColor(59, 130, 246); // blue-400
+    pdf.setFontSize(24);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('QualPlay', 20, 25);
+    
+    // Title na mesma linha
+    pdf.setFontSize(18);
+    pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(255, 255, 255);
-    pdf.text('QualPlay - Relatorio de Filmes', 20, 30);
+    pdf.text('Relatório de Filmes', 85, 25);
     
-    // Subtitle
+    // Subtitle mais próximo
     pdf.setFontSize(10);
     pdf.setTextColor(148, 163, 184); // slate-400
-    pdf.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 20, 45);
-    pdf.text(`Total de filmes: ${movies.length}`, 20, 55);
+    pdf.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 20, 35);
+    pdf.text(`Total de filmes: ${movies.length}`, 20, 42);
     
-    let yPosition = 80;
+    let yPosition = 60; // Começar mais cedo
     
     movies.forEach((movie, index) => {
       // Check if we need a new page
       if (yPosition > pageHeight - 80) {
         pdf.addPage();
-        yPosition = 30;
+        yPosition = 25;
       }
       
       // Movie number
@@ -59,20 +66,44 @@ const PDFExport: React.FC<PDFExportProps> = ({ movies }) => {
         `Diretor: ${movie.director || 'N/A'}`,
         `Avaliação: ${movie.vote_average.toFixed(1)}/10`,
         `Gêneros: ${movie.genres?.map(g => g.name).join(', ') || 'N/A'}`,
-        `Elenco: ${movie.cast || 'N/A'}`,
-        `Streaming: ${movie.streaming_services || 'N/A'}`,
-        `Trailer: https://youtube.com/results?search_query=${encodeURIComponent(movie.title + ' trailer')}`
+        `Elenco: ${movie.cast || 'N/A'}`
       ];
       
       details.forEach((detail) => {
-        if (detail.startsWith('Trailer:')) {
-          pdf.setTextColor(59, 130, 246); // blue-600 para links
-        } else {
-          pdf.setTextColor(80, 80, 80);
-        }
+        pdf.setTextColor(80, 80, 80);
         pdf.text(detail, 40, yPosition);
         yPosition += 6;
       });
+      
+      // Disponibilidade em linha separada com quebra de linha
+      if (movie.streaming_services && movie.streaming_services !== 'N/A' && movie.streaming_services !== 'Não disponível') {
+        pdf.setTextColor(59, 130, 246); // blue-600
+        pdf.text('Disponibilidade: ', 40, yPosition);
+        
+        // Quebrar texto longo em múltiplas linhas
+        const availabilityText = movie.streaming_services;
+        const maxWidth = pageWidth - 60;
+        const splitAvailability = pdf.splitTextToSize(availabilityText, maxWidth);
+        
+        pdf.setTextColor(80, 80, 80);
+        pdf.text(splitAvailability, 40, yPosition + 6);
+        yPosition += 6 + (splitAvailability.length * 4);
+      } else {
+        pdf.setTextColor(100, 100, 100);
+        pdf.text('Disponibilidade: Não disponível', 40, yPosition);
+        yPosition += 6;
+      }
+      
+      // Trailer link com quebra de linha CORRIGIDA
+      pdf.setTextColor(59, 130, 246);
+      const trailerText = `Trailer: https://youtube.com/results?search_query=${encodeURIComponent(movie.title + ' trailer')}`;
+      
+      // Quebrar URL longa em múltiplas linhas
+      const maxTrailerWidth = pageWidth - 60;
+      const splitTrailer = pdf.splitTextToSize(trailerText, maxTrailerWidth);
+      
+      pdf.text(splitTrailer, 40, yPosition);
+      yPosition += splitTrailer.length * 4 + 4; // Espaço proporcional ao número de linhas
       
       // Synopsis
       if (movie.overview) {
@@ -86,7 +117,7 @@ const PDFExport: React.FC<PDFExportProps> = ({ movies }) => {
       // Separator line
       pdf.setDrawColor(226, 232, 240); // slate-200
       pdf.line(20, yPosition + 5, pageWidth - 20, yPosition + 5);
-      yPosition += 20; // Space between movies
+      yPosition += 18; // Espaço menor entre filmes
     });
     
     // Footer
@@ -96,11 +127,11 @@ const PDFExport: React.FC<PDFExportProps> = ({ movies }) => {
       pdf.setFontSize(8);
       pdf.setTextColor(148, 163, 184);
       pdf.text(`Página ${i} de ${totalPages}`, pageWidth - 30, pageHeight - 10);
-      pdf.text('Gerado por QualPlay - Eduardo Ben-Hur', 20, pageHeight - 10);
+      pdf.text('Gerado por QualPlay', 20, pageHeight - 10);
     }
     
     // Save the PDF
-    pdf.save(`qualplay-filmes-${new Date().toISOString().split('T')[0]}.pdf`);
+    pdf.save(`QualPlay-relatorio-${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   if (movies.length === 0) {

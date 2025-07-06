@@ -3,7 +3,6 @@ import { Genre, SearchFilters, SearchResults, MovieDetails, Person } from '../ty
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY || 'fallback-key';
 const BASE_URL = 'https://api.themoviedb.org/3';
 
-
 // Cache para melhorar performance
 const cache = new Map<string, any>();
 
@@ -154,17 +153,37 @@ export const getMovieDetails = async (movieId: number): Promise<MovieDetails> =>
     let streamingServices = 'Não disponível';
     if (watchProvidersData.results?.BR) {
       const providers = watchProvidersData.results.BR;
-      const allProviders = [
-        ...(providers.flatrate || []),
-        ...(providers.rent || []),
-        ...(providers.buy || [])
-      ];
       
-      if (allProviders.length > 0) {
-        const uniqueProviders = Array.from(
-          new Set(allProviders.map(p => p.provider_name))
-        );
-        streamingServices = uniqueProviders.join(', ');
+      // 🎯 SEPARAR POR TIPO DE DISPONIBILIDADE
+      const streamingTypes = [];
+      
+      // Disponível na assinatura (flatrate)
+      if (providers.flatrate && providers.flatrate.length > 0) {
+        const flatrateServices = providers.flatrate.map(p => `${p.provider_name} (Incluído)`);
+        streamingTypes.push(...flatrateServices);
+      }
+      
+      // Disponível para alugar (rent)
+      if (providers.rent && providers.rent.length > 0) {
+        const rentServices = providers.rent
+          .filter(p => !providers.flatrate?.some(f => f.provider_name === p.provider_name))
+          .map(p => `${p.provider_name} (Aluguel)`);
+        streamingTypes.push(...rentServices);
+      }
+      
+      // Disponível para comprar (buy)
+      if (providers.buy && providers.buy.length > 0) {
+        const buyServices = providers.buy
+          .filter(p => 
+            !providers.flatrate?.some(f => f.provider_name === p.provider_name) &&
+            !providers.rent?.some(r => r.provider_name === p.provider_name)
+          )
+          .map(p => `${p.provider_name} (Compra)`);
+        streamingTypes.push(...buyServices);
+      }
+      
+      if (streamingTypes.length > 0) {
+        streamingServices = streamingTypes.join(', ');
       }
     }
 

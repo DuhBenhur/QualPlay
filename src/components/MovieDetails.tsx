@@ -240,18 +240,45 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
                       </h4>
                       {safeMovie.streaming_services !== 'Não disponível' && safeMovie.streaming_services !== 'N/A' ? (
                         <div className="flex flex-wrap gap-3">
-                          {safeMovie.streaming_services.split(',').map((service, index) => (
-                            <button
-                              key={index}
-                              onClick={() => handleStreamingClick(service.trim())}
-                              className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 hover:shadow-lg border border-green-500/30 hover:border-green-400 flex items-center gap-2"
-                              title={`Assistir ${safeMovie.title} no ${service.trim()}`}
-                            >
-                              <span className="text-lg">🎬</span>
-                              <span>{service.trim()}</span>
-                              <span className="text-xs opacity-75">→</span>
-                            </button>
-                          ))}
+                          {safeMovie.streaming_services.split(',').map((service, index) => {
+                            const trimmedService = service.trim();
+                            const isIncluded = trimmedService.includes('(Incluído)');
+                            const isRental = trimmedService.includes('(Aluguel)');
+                            const isPurchase = trimmedService.includes('(Compra)');
+                            
+                            let bgColor = 'bg-green-600 hover:bg-green-700 border-green-500/30 hover:border-green-400';
+                            let icon = '✅';
+                            let typeText = 'Incluído na assinatura';
+                            
+                            if (isRental) {
+                              bgColor = 'bg-yellow-600 hover:bg-yellow-700 border-yellow-500/30 hover:border-yellow-400';
+                              icon = '💰';
+                              typeText = 'Disponível para aluguel';
+                            } else if (isPurchase) {
+                              bgColor = 'bg-red-600 hover:bg-red-700 border-red-500/30 hover:border-red-400';
+                              icon = '🛒';
+                              typeText = 'Disponível para compra';
+                            }
+                            
+                            const serviceName = trimmedService.replace(/\s*\([^)]*\)/, '');
+                            
+                            return (
+                              <button
+                                key={index}
+                                onClick={() => handleStreamingClick(trimmedService)}
+                                className={`${bgColor} text-white px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 hover:shadow-lg border flex flex-col items-center gap-1 min-w-[120px]`}
+                                title={`${typeText} - ${serviceName}`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="text-lg">{icon}</span>
+                                  <span className="font-semibold">{serviceName}</span>
+                                </div>
+                                <span className="text-xs opacity-90 font-medium">
+                                  {isIncluded ? 'Incluído' : isRental ? 'Aluguel' : isPurchase ? 'Compra' : 'Assistir'}
+                                </span>
+                              </button>
+                            );
+                          })}
                         </div>
                       ) : (
                         <div className="bg-slate-600 text-slate-400 px-4 py-3 rounded-lg text-sm">

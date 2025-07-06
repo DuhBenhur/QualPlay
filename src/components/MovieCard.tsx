@@ -89,6 +89,18 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, onFavoriteToggle 
   };
 
   const getStreamingBadgeColor = (service: string) => {
+    // 🎯 CORES BASEADAS NO TIPO DE DISPONIBILIDADE
+    if (service.includes('(Incluído)')) {
+      return 'bg-green-600'; // Verde = incluído na assinatura
+    }
+    if (service.includes('(Aluguel)')) {
+      return 'bg-yellow-600'; // Amarelo = aluguel
+    }
+    if (service.includes('(Compra)')) {
+      return 'bg-red-600'; // Vermelho = compra
+    }
+    
+    // Fallback para cores por serviço (caso não tenha tipo)
     const lowerService = service.toLowerCase();
     if (lowerService.includes('netflix')) return 'bg-red-600';
     if (lowerService.includes('amazon') || lowerService.includes('prime')) return 'bg-blue-600';
@@ -98,7 +110,14 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, onFavoriteToggle 
     if (lowerService.includes('apple')) return 'bg-gray-800';
     if (lowerService.includes('globoplay')) return 'bg-blue-700';
     if (lowerService.includes('telecine')) return 'bg-yellow-600';
-    return 'bg-green-600';
+    return 'bg-gray-600';
+  };
+
+  const getStreamingIcon = (service: string) => {
+    if (service.includes('(Incluído)')) return '✅'; // Incluído
+    if (service.includes('(Aluguel)')) return '💰'; // Aluguel
+    if (service.includes('(Compra)')) return '🛒'; // Compra
+    return '🎬'; // Padrão
   };
 
   const parseStreamingServices = (services: string) => {
@@ -210,8 +229,8 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, onFavoriteToggle 
                   className={`${getStreamingBadgeColor(service)} text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-200 cursor-pointer border border-white/20 hover:border-white/40`}
                   title={`Assistir no ${service}`}
                 >
-                  <span className="flex items-center gap-1">
-                    🎬 {service}
+                  <span className="flex items-center gap-1 text-xs">
+                    {getStreamingIcon(service)} {service.replace(/\s*\([^)]*\)/, '')}
                   </span>
                 </button>
               ))}
@@ -241,10 +260,10 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, onFavoriteToggle 
                 <button
                   key={index}
                   onClick={(e) => handleStreamingClick(e, service)}
-                  className={`${getStreamingBadgeColor(service)} text-white text-xs px-2 py-1 rounded font-medium hover:scale-105 transition-transform cursor-pointer`}
+                  className={`${getStreamingBadgeColor(service)} text-white text-xs px-2 py-1 rounded font-medium hover:scale-105 transition-transform cursor-pointer flex items-center gap-1`}
                   title={`Assistir no ${service}`}
                 >
-                  {service}
+                  {getStreamingIcon(service)} {service.replace(/\s*\([^)]*\)/, '')}
                 </button>
               ))}
             </div>

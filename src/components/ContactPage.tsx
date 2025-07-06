@@ -93,7 +93,7 @@ const ContactPage: React.FC = () => {
             Entre em Contato
           </h1>
           <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-            Tem alguma dúvida, sugestão ou feedback sobre o Busca Filmes Pro? Adoraria ouvir de você!
+            Tem alguma dúvida, sugestão ou feedback sobre o QualPlay? Adoraria ouvir de você!
           </p>
         </div>
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, X, Play, Calendar, Star, Download, Tv, GripVertical, ArrowUpDown, ChevronUp, ChevronDown } from 'lucide-react';
+import { Heart, X, Play, Calendar, Star, Download, Tv, ArrowUp, ArrowDown, GripVertical, ArrowUpDown } from 'lucide-react';
 import { getImageUrl } from '../services/tmdbApi';
 import jsPDF from 'jspdf';
 
@@ -26,13 +26,12 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
   const [isOpen, setIsOpen] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  
-  // Detectar se é mobile
   const [isMobile, setIsMobile] = useState(false);
-  
+
+  // Detectar mobile
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768 || 'ontouchstart' in window);
+      setIsMobile(window.innerWidth < 768);
     };
     
     checkMobile();
@@ -67,60 +66,56 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
     window.dispatchEvent(new CustomEvent('savedMoviesChanged'));
   };
 
-  // Função para mover filmes (mobile)
-  const moveMovie = (fromIndex: number, direction: 'up' | 'down') => {
-    const newMovies = [...savedMovies];
-    const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
+  const moveMovie = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
     
-    if (toIndex >= 0 && toIndex < newMovies.length) {
-      [newMovies[fromIndex], newMovies[toIndex]] = [newMovies[toIndex], newMovies[fromIndex]];
-      setSavedMovies(newMovies);
-      localStorage.setItem('savedMovies', JSON.stringify(newMovies));
-      window.dispatchEvent(new CustomEvent('savedMoviesChanged'));
+    const newMovies = [...savedMovies];
+    const [movedMovie] = newMovies.splice(fromIndex, 1);
+    newMovies.splice(toIndex, 0, movedMovie);
+    
+    setSavedMovies(newMovies);
+    localStorage.setItem('savedMovies', JSON.stringify(newMovies));
+    window.dispatchEvent(new CustomEvent('savedMoviesChanged'));
+  };
+
+  const moveUp = (index: number) => {
+    if (index > 0) {
+      moveMovie(index, index - 1);
     }
   };
 
-  // Drag & Drop functions (desktop only)
+  const moveDown = (index: number) => {
+    if (index < savedMovies.length - 1) {
+      moveMovie(index, index + 1);
+    }
+  };
+
+  // Drag and Drop handlers
   const handleDragStart = (e: React.DragEvent, index: number) => {
-    if (isMobile) return;
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
   };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
-    if (isMobile) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     setDragOverIndex(index);
   };
 
   const handleDragLeave = () => {
-    if (isMobile) return;
     setDragOverIndex(null);
   };
 
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
-    if (isMobile) return;
     e.preventDefault();
-    
     if (draggedIndex !== null && draggedIndex !== dropIndex) {
-      const newMovies = [...savedMovies];
-      const draggedMovie = newMovies[draggedIndex];
-      
-      newMovies.splice(draggedIndex, 1);
-      newMovies.splice(dropIndex, 0, draggedMovie);
-      
-      setSavedMovies(newMovies);
-      localStorage.setItem('savedMovies', JSON.stringify(newMovies));
-      window.dispatchEvent(new CustomEvent('savedMoviesChanged'));
+      moveMovie(draggedIndex, dropIndex);
     }
-    
     setDraggedIndex(null);
     setDragOverIndex(null);
   };
 
   const handleDragEnd = () => {
-    if (isMobile) return;
     setDraggedIndex(null);
     setDragOverIndex(null);
   };
@@ -130,6 +125,10 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
   };
 
   const getStreamingBadgeColor = (service: string) => {
+    if (service.includes('(Incluído)')) return 'bg-green-600';
+    if (service.includes('(Aluguel)')) return 'bg-yellow-600';
+    if (service.includes('(Compra)')) return 'bg-red-600';
+    
     const lowerService = service.toLowerCase();
     if (lowerService.includes('netflix')) return 'bg-red-600';
     if (lowerService.includes('amazon') || lowerService.includes('prime')) return 'bg-blue-600';
@@ -139,7 +138,14 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
     if (lowerService.includes('apple')) return 'bg-gray-800';
     if (lowerService.includes('globoplay')) return 'bg-blue-700';
     if (lowerService.includes('telecine')) return 'bg-yellow-600';
-    return 'bg-green-600';
+    return 'bg-gray-600';
+  };
+
+  const getStreamingIcon = (service: string) => {
+    if (service.includes('(Incluído)')) return '✅';
+    if (service.includes('(Aluguel)')) return '💰';
+    if (service.includes('(Compra)')) return '🛒';
+    return '🎬';
   };
 
   const parseStreamingServices = (services: string) => {
@@ -190,39 +196,44 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
     
-    // Header
+    // Header mais compacto
     pdf.setFillColor(15, 23, 42);
-    pdf.rect(0, 0, pageWidth, 60, 'F');
+    pdf.rect(0, 0, pageWidth, 45, 'F');
     
-    pdf.setTextColor(59, 130, 246);
+    // Logo QualPlay
+    pdf.setTextColor(220, 38, 127); // pink-600
     pdf.setFontSize(24);
-    pdf.text('❤️', 20, 35);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('QualPlay', 20, 25);
     
-    pdf.setFontSize(22);
+    // Title
+    pdf.setFontSize(18);
+    pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(255, 255, 255);
-    pdf.text('Minha Lista Personalizada de Filmes', 40, 30);
+    pdf.text('- Minha Lista Personalizada de Filmes', 85, 25);
     
+    // Subtitle
     pdf.setFontSize(10);
     pdf.setTextColor(148, 163, 184);
-    pdf.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 40, 45);
-    pdf.text(`Total de filmes: ${savedMovies.length} (na ordem personalizada)`, 40, 55);
+    pdf.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 20, 35);
+    pdf.text(`Total de filmes: ${savedMovies.length} (na ordem personalizada)`, 20, 42);
     
-    let yPosition = 80;
+    let yPosition = 60;
     
     savedMovies.forEach((movie, index) => {
-      if (yPosition > pageHeight - 80) {
+      if (yPosition > pageHeight - 60) {
         pdf.addPage();
-        yPosition = 30;
+        yPosition = 25;
       }
       
-      // Movie number
-      pdf.setFillColor(220, 38, 127);
+      // Movie number com cor especial
+      pdf.setFillColor(220, 38, 127); // pink-600
       pdf.circle(25, yPosition - 5, 8, 'F');
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(10);
       pdf.text((index + 1).toString(), 25, yPosition - 2, { align: 'center' });
       
-      // Movie title
+      // Movie title com posição na lista
       pdf.setFontSize(16);
       pdf.setTextColor(40, 40, 40);
       pdf.text(`#${index + 1} - ${movie.title}`, 40, yPosition);
@@ -237,15 +248,37 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
         `Ano: ${new Date(movie.release_date).getFullYear()}`,
         `Diretor: ${movie.director || 'N/A'}`,
         `Avaliação: ${movie.vote_average.toFixed(1)}/10`,
-        `Gêneros: ${movie.genres || 'N/A'}`,
-        `Streaming: ${movie.streaming_services || 'N/A'}`,
-        `Adicionado em: ${formatDate(movie.savedAt)}`
+        `Gêneros: ${movie.genres || 'N/A'}`
       ];
       
       details.forEach((detail) => {
+        pdf.setTextColor(80, 80, 80);
         pdf.text(detail, 40, yPosition);
         yPosition += 6;
       });
+      
+      // Streaming com quebra de linha
+      if (movie.streaming_services && movie.streaming_services !== 'N/A' && movie.streaming_services !== 'Não disponível') {
+        pdf.setTextColor(220, 38, 127);
+        pdf.text('Streaming: ', 40, yPosition);
+        
+        const streamingText = movie.streaming_services;
+        const maxWidth = pageWidth - 60;
+        const splitStreaming = pdf.splitTextToSize(streamingText, maxWidth);
+        
+        pdf.setTextColor(80, 80, 80);
+        pdf.text(splitStreaming, 40, yPosition + 6);
+        yPosition += 6 + (splitStreaming.length * 4);
+      } else {
+        pdf.setTextColor(100, 100, 100);
+        pdf.text('Streaming: Não disponível', 40, yPosition);
+        yPosition += 6;
+      }
+      
+      // Data de adição
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Adicionado em: ${formatDate(movie.savedAt)}`, 40, yPosition);
+      yPosition += 8;
       
       // Synopsis
       if (movie.overview) {
@@ -259,7 +292,7 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
       // Separator line
       pdf.setDrawColor(226, 232, 240);
       pdf.line(20, yPosition + 5, pageWidth - 20, yPosition + 5);
-      yPosition += 20;
+      yPosition += 18;
     });
     
     // Footer
@@ -269,10 +302,10 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
       pdf.setFontSize(8);
       pdf.setTextColor(148, 163, 184);
       pdf.text(`Página ${i} de ${totalPages}`, pageWidth - 30, pageHeight - 10);
-      pdf.text('Lista Personalizada - QualPlay', 20, pageHeight - 10);
+      pdf.text('Lista Personalizada - Busca Filmes Pro', 20, pageHeight - 10);
     }
     
-    pdf.save(`minha-lista-filmes-${new Date().toISOString().split('T')[0]}.pdf`);
+    pdf.save(`QualPlay-meus-filmes-${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   if (!isOpen) {
@@ -309,7 +342,7 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
                   className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm"
                 >
                   <Download size={16} />
-                  <span className="hidden md:inline">PDF Salvos</span>
+                  <span className="hidden md:inline">PDF Lista</span>
                 </button>
               )}
               <button
@@ -330,106 +363,76 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
                 Nenhum filme salvo ainda
               </h3>
               <p className="text-slate-400">
-                Salve filmes clicando no coração ❤️ nos cards dos filmes
+                Salve filmes clicando no ❤️ nos cards ou no botão "Salvar" nos detalhes do filme
               </p>
             </div>
           ) : (
             <>
-              {/* MOBILE: Lista simples e limpa */}
+              {/* MOBILE: Lista com botões de reordenação */}
               {isMobile ? (
                 <div className="space-y-4">
                   {savedMovies.map((movie, index) => (
-                    <div
-                      key={movie.id}
-                      className="bg-slate-700 rounded-lg p-4 hover:bg-slate-600 transition-colors"
-                    >
-                      <div className="flex gap-4">
+                    <div key={movie.id} className="bg-slate-700 rounded-lg overflow-hidden">
+                      <div className="flex">
                         {/* Poster pequeno */}
-                        <div className="relative flex-shrink-0">
-                          <img
-                            src={getImageUrl(movie.poster_path)}
-                            alt={movie.title}
-                            className="w-20 h-28 object-cover rounded"
-                            onError={(e) => {
-                              e.currentTarget.src = '/placeholder-movie.jpg';
-                            }}
-                          />
-                          {/* Número da posição */}
-                          <div className="absolute -top-2 -left-2 bg-blue-600 text-white text-sm px-2 py-1 rounded-full font-bold">
-                            #{index + 1}
-                          </div>
-                        </div>
+                        <img
+                          src={getImageUrl(movie.poster_path)}
+                          alt={movie.title}
+                          className="w-20 h-28 object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = '/placeholder-movie.jpg';
+                          }}
+                        />
                         
-                        {/* Informações */}
-                        <div className="flex-1 min-w-0">
+                        {/* Conteúdo */}
+                        <div className="flex-1 p-3">
                           <div className="flex items-start justify-between mb-2">
-                            <h3 className="text-white font-medium text-sm line-clamp-2 pr-2">
-                              {movie.title}
-                            </h3>
+                            <div className="flex items-center gap-2">
+                              <div className="bg-blue-600 text-white text-sm px-2 py-1 rounded font-bold">
+                                #{index + 1}
+                              </div>
+                              <h3 className="text-white font-medium text-sm line-clamp-2">
+                                {movie.title}
+                              </h3>
+                            </div>
                             
-                            {/* Controles de ordem */}
-                            <div className="flex flex-col gap-1 flex-shrink-0">
-                              {index > 0 && (
-                                <button
-                                  onClick={() => moveMovie(index, 'up')}
-                                  className="bg-blue-600 text-white p-1 rounded hover:bg-blue-700 transition-colors"
-                                  title="Mover para cima"
-                                >
-                                  <ChevronUp size={14} />
-                                </button>
-                              )}
-                              {index < savedMovies.length - 1 && (
-                                <button
-                                  onClick={() => moveMovie(index, 'down')}
-                                  className="bg-blue-600 text-white p-1 rounded hover:bg-blue-700 transition-colors"
-                                  title="Mover para baixo"
-                                >
-                                  <ChevronDown size={14} />
-                                </button>
-                              )}
+                            {/* Botões de reordenação mobile */}
+                            <div className="flex flex-col gap-1 ml-2">
+                              <button
+                                onClick={() => moveUp(index)}
+                                disabled={index === 0}
+                                className="p-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <ArrowUp size={12} />
+                              </button>
+                              <button
+                                onClick={() => moveDown(index)}
+                                disabled={index === savedMovies.length - 1}
+                                className="p-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <ArrowDown size={12} />
+                              </button>
                             </div>
                           </div>
                           
-                          <div className="flex items-center gap-4 text-xs text-slate-400 mb-2">
-                            <div className="flex items-center gap-1">
-                              <Calendar size={10} />
-                              {formatDate(movie.release_date)}
-                            </div>
+                          <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+                            <span>{formatDate(movie.release_date)}</span>
                             <div className="flex items-center gap-1">
                               <Star className="text-yellow-400 fill-current" size={10} />
                               {movie.vote_average.toFixed(1)}
                             </div>
                           </div>
                           
-                          {/* Streaming */}
-                          {movie.streaming_services && movie.streaming_services !== 'Não disponível' && (
-                            <div className="mb-2">
-                              <div className="flex flex-wrap gap-1">
-                                {parseStreamingServices(movie.streaming_services).map((service, serviceIndex) => (
-                                  <button
-                                    key={serviceIndex}
-                                    onClick={(e) => handleStreamingClick(e, service, movie.title)}
-                                    className={`${getStreamingBadgeColor(service)} text-white text-xs px-2 py-1 rounded-full hover:scale-105 transition-transform cursor-pointer`}
-                                    title={`Assistir ${movie.title} no ${service}`}
-                                  >
-                                    🎬 {service}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          
-                          {/* Botões */}
-                          <div className="flex gap-2">
+                          <div className="flex items-center gap-2">
                             <button
                               onClick={() => {
                                 onMovieClick(movie.id);
                                 setIsOpen(false);
                               }}
-                              className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors"
+                              className="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors"
                             >
-                              <Play size={12} />
-                              Detalhes
+                              <Play size={10} className="inline mr-1" />
+                              Ver
                             </button>
                             <button
                               onClick={() => removeSavedMovie(movie.id)}
@@ -510,7 +513,7 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
                                   className={`${getStreamingBadgeColor(service)} text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-200 cursor-pointer border border-white/20 hover:border-white/40`}
                                   title={`Assistir ${movie.title} no ${service}`}
                                 >
-                                  🎬 {service}
+                                  {getStreamingIcon(service)} {service.replace(/\s*\([^)]*\)/, '')}
                                 </button>
                               ))}
                             </div>
@@ -563,7 +566,7 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
                                     className={`${getStreamingBadgeColor(service)} text-white text-xs px-2 py-1 rounded hover:scale-105 transition-transform cursor-pointer`}
                                     title={`Assistir ${movie.title} no ${service}`}
                                   >
-                                    {service}
+                                    {getStreamingIcon(service)} {service.replace(/\s*\([^)]*\)/, '')}
                                   </button>
                                 ))}
                               </div>
