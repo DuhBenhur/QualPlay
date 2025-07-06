@@ -267,7 +267,7 @@ function App() {
               <div className="text-center py-12">
                 <Film className="mx-auto text-slate-600 mb-4" size={64} />
                 <h2 className="text-lg md:text-xl font-semibold text-white mb-2">
-                  Bem-vindo ao Busca Filmes Pro
+                  Bem-vindo ao QualPlay
                 </h2>
                 <p className="text-slate-400 mb-6 text-sm md:text-base px-4">
                   Use a barra lateral para pesquisar filmes por título, diretor ou descobrir novos filmes com filtros avançados
