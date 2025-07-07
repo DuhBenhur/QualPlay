@@ -152,7 +152,7 @@ const AboutPage: React.FC = () => {
               />
               <div>
                 <h3 className="text-xl font-semibold text-white">Eduardo Ben-Hur</h3>
-                <p className="text-blue-400">Desenvolvedor Full Stack</p>
+                <p className="text-blue-400">Analista de dados e curioso na vida</p>
               </div>
             </div>
             <p className="text-slate-300 leading-relaxed">
