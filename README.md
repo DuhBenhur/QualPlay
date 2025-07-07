@@ -341,7 +341,7 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 ## 🎯 Estatísticas do Projeto
 
 ```
-📊 Linhas de Código: ~3.000+
+📊 Linhas de Código: ~8.000+
 🧩 Componentes: 12
 📱 100% Responsivo: ✅
 🎨 Design System: ✅
