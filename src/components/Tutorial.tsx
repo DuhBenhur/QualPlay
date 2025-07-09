@@ -341,31 +341,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
             <div className="space-y-2">
               <p className="text-slate-300 text-sm">• <strong>Identifique o tipo:</strong> Pela cor do badge (verde/amarelo/vermelho)</p>
               <p className="text-slate-300 text-sm">• <strong>Clique no badge:</strong> Vai direto para a plataforma de streaming</p>
-              <p className="text-slate-300 text-sm">• <strong>Compare opções:</strong> Veja todas as plataformas disponíveis</p>
-            </div>
-          </div>
-          
-          <div className="bg-slate-700 rounded-lg p-4">
-            <h4 className="text-white font-medium mb-3">🌟 Plataformas Suportadas:</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
-              <div className="bg-slate-600 rounded p-2 text-center">
-                <p className="text-red-400 font-medium">Netflix</p>
-              </div>
-              <div className="bg-slate-600 rounded p-2 text-center">
-                <p className="text-blue-400 font-medium">Amazon Prime</p>
-              </div>
-              <div className="bg-slate-600 rounded p-2 text-center">
-                <p className="text-blue-800 font-medium">Disney+</p>
-              </div>
-              <div className="bg-slate-600 rounded p-2 text-center">
-                <p className="text-purple-400 font-medium">HBO Max</p>
-              </div>
-              <div className="bg-slate-600 rounded p-2 text-center">
-                <p className="text-blue-700 font-medium">Globoplay</p>
-              </div>
-              <div className="bg-slate-600 rounded p-2 text-center">
-                <p className="text-yellow-600 font-medium">Telecine</p>
-              </div>
+              <p className="text-slate-300 text-sm">• <strong>Compare opções:</strong>Aproveite seus momentos de lazer vendo bons filmes</p>
             </div>
           </div>
           
