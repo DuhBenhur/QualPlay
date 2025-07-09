@@ -210,7 +210,7 @@ const SavedMovies: React.FC<SavedMoviesProps> = ({ onMovieClick, savedCount }) =
     pdf.setFontSize(18);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(255, 255, 255);
-    pdf.text('- Minha Lista Personalizada de Filmes', 85, 25);
+    pdf.text('Minha Lista Personalizada de Filmes', 85, 25);
     
     // Subtitle
     pdf.setFontSize(10);

@@ -219,9 +219,7 @@ function App() {
             
             {!isLoading && movies.length > 0 && (
               <>
-                <DataVisualizationDashboard movies={movies} />
-                
-                {viewMode === 'grid' ? (
+              {viewMode === 'grid' ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-8">
                     {movies.map((movie) => (
                       <MovieCard
@@ -243,6 +241,8 @@ function App() {
                     />
                   </div>
                 )}
+
+                <DataVisualizationDashboard movies={movies} />
 
                 <RecommendationEngine 
                   watchedMovies={movies}
