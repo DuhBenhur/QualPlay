@@ -18,9 +18,7 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
   const [recommendationType, setRecommendationType] = useState<'smart' | 'trending' | 'recent' | 'quality'>('smart');
 
   useEffect(() => {
-    if (watchedMovies.length > 0) {
-      generateRecommendations();
-    }
+    generateRecommendations();
   }, [watchedMovies, recommendationType]);
 
   const generateRecommendations = async () => {
@@ -46,7 +44,7 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
               return acc;
             }, {} as Record<number, number>);
             
-            // Pegar os 3 gêneros mais comuns (aumentado de 2)
+            // Pegar os 3 gêneros mais comuns
             const topGenres = Object.entries(genreCount)
               .sort(([,a], [,b]) => b - a)
               .slice(0, 3)
@@ -60,7 +58,7 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
               .filter(year => !isNaN(year));
             
             const avgYear = years.length > 0 ? Math.round(years.reduce((sum, year) => sum + year, 0) / years.length) : 2020;
-            const yearStart = Math.max(avgYear - 15, 1990); // Mais flexível: 15 anos, mínimo 1990
+            const yearStart = Math.max(avgYear - 15, 1990);
             
             console.log(`🧠 Recomendação inteligente: gêneros ${topGenres}, anos ${yearStart}-${new Date().getFullYear()}`);
             
@@ -72,7 +70,7 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
               region: 'BR'
             };
           } else {
-            // Fallback para usuários novos
+            // Fallback para usuários novos - filmes populares e bem avaliados
             filters = {
               genres: [28, 35, 18, 878, 53], // Ação, Comédia, Drama, Ficção Científica, Thriller
               yearStart: 2015,
@@ -87,7 +85,7 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
           console.log('📈 Buscando filmes em alta...');
           filters = {
             genres: [],
-            yearStart: 2022, // Mais flexível
+            yearStart: 2022,
             yearEnd: new Date().getFullYear(),
             sortBy: 'popularity.desc',
             region: 'BR'
@@ -98,7 +96,7 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
           console.log('📅 Buscando lançamentos recentes...');
           filters = {
             genres: [],
-            yearStart: new Date().getFullYear() - 2, // Últimos 2 anos
+            yearStart: new Date().getFullYear() - 2,
             yearEnd: new Date().getFullYear(),
             sortBy: 'release_date.desc',
             region: 'BR'
@@ -109,7 +107,7 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
           console.log('⭐ Buscando filmes de qualidade...');
           filters = {
             genres: [],
-            yearStart: 2010, // Mais flexível
+            yearStart: 2010,
             yearEnd: new Date().getFullYear(),
             sortBy: 'vote_average.desc',
             region: 'BR'
@@ -121,7 +119,7 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
       const results = await discoverMovies(filters);
       console.log(`📊 API retornou ${results.movies.length} filmes`);
       
-      // 🎯 FILTROS DE QUALIDADE MUITO MAIS FLEXÍVEIS
+      // 🎯 FILTROS DE QUALIDADE MAIS FLEXÍVEIS
       let qualityMovies = results.movies.filter(movie => {
         // Remove filmes já assistidos
         const watchedIds = new Set(watchedMovies.map(m => m.id));
@@ -130,33 +128,27 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
           return false;
         }
         
-        // 🔥 FILTROS MUITO MAIS FLEXÍVEIS
-        
-        // 1. Avaliação mínima MUITO flexível
-        if (movie.vote_average < 4.0) {
-          console.log(`🚫 Avaliação muito baixa: ${movie.title} (${movie.vote_average})`);
+        // Filtros básicos de qualidade
+        if (movie.vote_average < 5.0) {
+          console.log(`🚫 Avaliação baixa: ${movie.title} (${movie.vote_average})`);
           return false;
         }
         
-        // 2. Votos mínimos MUITO flexível
-        if (movie.vote_count < 5) {
+        if (movie.vote_count < 20) {
           console.log(`🚫 Poucos votos: ${movie.title} (${movie.vote_count})`);
           return false;
         }
         
-        // 3. Deve ter pelo menos um gênero
         if (!movie.genres || movie.genres.length === 0) {
           console.log(`🚫 Sem gêneros: ${movie.title}`);
           return false;
         }
         
-        // 4. Não deve ser filme adulto
         if (movie.adult) {
           console.log(`🚫 Filme adulto: ${movie.title}`);
           return false;
         }
         
-        // 5. Deve ter título válido
         if (!movie.title || movie.title.trim().length === 0) {
           console.log(`🚫 Sem título: ${movie.id}`);
           return false;
@@ -168,21 +160,21 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
       
       console.log(`✅ Após filtros de qualidade: ${qualityMovies.length} filmes`);
       
-      // Se ainda não temos filmes suficientes, pegar QUALQUER filme válido
+      // Se ainda não temos filmes suficientes, relaxar critérios
       if (qualityMovies.length < 4) {
-        console.log('🔄 Critérios ULTRA flexíveis - pegando qualquer filme válido...');
+        console.log('🔄 Relaxando critérios de qualidade...');
         qualityMovies = results.movies.filter(movie => {
           const watchedIds = new Set(watchedMovies.map(m => m.id));
           if (watchedIds.has(movie.id)) return false;
           
-          // Critérios MÍNIMOS
+          // Critérios mais flexíveis
           if (!movie.title || movie.title.trim().length === 0) return false;
           if (movie.adult) return false;
-          if (movie.vote_average < 1.0) return false; // Só remove filmes com avaliação 0
+          if (movie.vote_average < 3.0) return false;
           
           return true;
         });
-        console.log(`🔄 Após critérios ultra flexíveis: ${qualityMovies.length} filmes`);
+        console.log(`🔄 Após relaxar critérios: ${qualityMovies.length} filmes`);
       }
       
       // 🎲 DIVERSIFICAR POR GÊNERO
@@ -252,7 +244,7 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
     return diversified;
   };
 
-  // 🚫 SEM FILMES ASSISTIDOS = SEM RECOMENDAÇÕES
+  // 🚫 SEM FILMES ASSISTIDOS = RECOMENDAÇÕES GERAIS
   if (watchedMovies.length === 0) {
     return (
       <div className="bg-slate-800 rounded-lg p-6">
