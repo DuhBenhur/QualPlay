@@ -429,6 +429,16 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
         >
           Nova Busca (Limpar Tudo)
         </button>
+        
+        {/* Dica para Tutorial - Só aparece se nunca viu */}
+        {!localStorage.getItem('hasSeenTutorial') && (
+          <div className="p-3 bg-gradient-to-r from-indigo-900/50 to-purple-900/50 rounded-lg border border-indigo-500/30 text-center">
+            <p className="text-indigo-200 text-sm">
+              <strong>🎯 Primeira vez aqui?</strong><br/>
+              Clique no botão "Tutorial" para aprender todas as funcionalidades!
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

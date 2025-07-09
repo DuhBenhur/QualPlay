@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, List, Film } from 'lucide-react';
+import { Grid, List, Film, HelpCircle } from 'lucide-react';
 import Navigation from './components/Navigation';
 import SearchSidebar from './components/SearchSidebar';
 import MovieCard from './components/MovieCard';
@@ -11,6 +11,7 @@ import AboutPage from './components/AboutPage';
 import ContactPage from './components/ContactPage';
 import SavedMovies from './components/SavedMovies';
 import RecommendationEngine from './components/RecommendationEngine';
+import Tutorial from './components/Tutorial';
 import { MovieDetails as MovieDetailsType, SearchFilters } from './types/movie';
 import { searchMoviesAndDirectors, getMovieDetails } from './services/tmdbApi';
 
@@ -22,6 +23,20 @@ function App() {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [hasSearched, setHasSearched] = useState(false);
   const [savedMoviesCount, setSavedMoviesCount] = useState(0);
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  // Verificar se é a primeira visita para mostrar tutorial
+  useEffect(() => {
+    const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
+    if (!hasSeenTutorial) {
+      setShowTutorial(true);
+    }
+  }, []);
+
+  const handleCloseTutorial = () => {
+    setShowTutorial(false);
+    localStorage.setItem('hasSeenTutorial', 'true');
+  };
 
   // Atualizar contador de filmes salvos
   useEffect(() => {
@@ -132,8 +147,16 @@ function App() {
   if (currentPage === 'about') {
     return (
       <>
-        <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
+        <Navigation 
+          currentPage={currentPage} 
+          onPageChange={setCurrentPage}
+          onOpenTutorial={() => setShowTutorial(true)}
+        />
         <AboutPage />
+        <Tutorial 
+          isOpen={showTutorial} 
+          onClose={handleCloseTutorial} 
+        />
       </>
     );
   }
@@ -141,15 +164,27 @@ function App() {
   if (currentPage === 'contact') {
     return (
       <>
-        <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
+        <Navigation 
+          currentPage={currentPage} 
+          onPageChange={setCurrentPage}
+          onOpenTutorial={() => setShowTutorial(true)}
+        />
         <ContactPage />
+        <Tutorial 
+          isOpen={showTutorial} 
+          onClose={handleCloseTutorial} 
+        />
       </>
     );
   }
 
   return (
     <div className="min-h-screen bg-slate-900">
-      <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
+      <Navigation 
+        currentPage={currentPage} 
+        onPageChange={setCurrentPage}
+        onOpenTutorial={() => setShowTutorial(true)}
+      />
       
       <div className="flex flex-col md:flex-row">
         {/* Sidebar - Full width no mobile, fixed width no desktop */}
@@ -176,6 +211,15 @@ function App() {
                 {movies.length > 0 && (
                   <div className="flex items-center gap-4">
                     <PDFExport movies={movies} />
+                    
+                    <button
+                      onClick={() => setShowTutorial(true)}
+                      className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm"
+                      title="Abrir tutorial"
+                    >
+                      <HelpCircle size={16} />
+                      <span className="hidden md:inline">Tutorial</span>
+                    </button>
                     
                     <div className="hidden md:flex items-center gap-2">
                       <button
@@ -219,7 +263,7 @@ function App() {
             
             {!isLoading && movies.length > 0 && (
               <>
-              {viewMode === 'grid' ? (
+               {viewMode === 'grid' ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-8">
                     {movies.map((movie) => (
                       <MovieCard
@@ -241,8 +285,10 @@ function App() {
                     />
                   </div>
                 )}
-
+                
                 <DataVisualizationDashboard movies={movies} />
+                
+               
 
                 <RecommendationEngine 
                   watchedMovies={movies}
@@ -294,13 +340,13 @@ function App() {
           onClose={handleCloseDetails}
         />
       )}
+      
+      <Tutorial 
+        isOpen={showTutorial} 
+        onClose={handleCloseTutorial} 
+      />
     </div>
   );
 }
 
 export default App;
-
-
-
-
- 

@@ -1,12 +1,13 @@
 import React from 'react';
-import { Film, Info, MessageSquare, Home } from 'lucide-react';
+import { Film, Info, MessageSquare, Home, HelpCircle } from 'lucide-react';
 
 interface NavigationProps {
   currentPage: 'home' | 'about' | 'contact';
   onPageChange: (page: 'home' | 'about' | 'contact') => void;
+  onOpenTutorial?: () => void;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange }) => {
+const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange, onOpenTutorial }) => {
   const navItems = [
     { id: 'home' as const, label: 'Buscar Filmes', icon: Home },
     { id: 'about' as const, label: 'Sobre', icon: Info },
@@ -52,6 +53,17 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange }) =>
                 </button>
               );
             })}
+            
+            {onOpenTutorial && (
+              <button
+                onClick={onOpenTutorial}
+                className="flex items-center gap-2 px-4 py-2 rounded-md transition-colors text-slate-300 hover:text-white hover:bg-slate-700"
+                title="Abrir tutorial"
+              >
+                <HelpCircle size={18} />
+                <span className="hidden sm:inline">Tutorial</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
