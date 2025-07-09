@@ -13,7 +13,8 @@ import {
   Upload,
   BarChart3,
   Zap,
-  BookOpen
+  BookOpen,
+  Tv
 } from 'lucide-react';
 
 interface TutorialStep {
@@ -57,6 +58,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
             <ul className="text-slate-300 text-sm space-y-1">
               <li>• Como buscar filmes e diretores</li>
               <li>• Usar filtros avançados e busca combinada</li>
+              <li>• Entender tipos de disponibilidade em streaming</li>
               <li>• Salvar filmes favoritos e criar listas</li>
               <li>• Gerar relatórios em PDF</li>
               <li>• Entender o sistema de recomendações</li>
@@ -293,6 +295,93 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
       )
     },
     {
+      id: 'streaming-availability',
+      title: 'Disponibilidade em Streaming',
+      description: 'Entenda os tipos de disponibilidade e onde assistir',
+      icon: <Tv className="text-cyan-400" size={24} />,
+      content: (
+        <div className="space-y-4">
+          <div className="bg-slate-700 rounded-lg p-4">
+            <h4 className="text-white font-medium mb-3">🎬 Tipos de Disponibilidade:</h4>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="bg-green-600 text-white text-sm px-3 py-2 rounded-full font-medium flex items-center gap-1">
+                  ✅ Netflix
+                </div>
+                <div>
+                  <p className="text-white font-medium">Incluído na Assinatura</p>
+                  <p className="text-slate-400 text-sm">Assista sem custo adicional</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <div className="bg-yellow-600 text-white text-sm px-3 py-2 rounded-full font-medium flex items-center gap-1">
+                  💰 Amazon Prime
+                </div>
+                <div>
+                  <p className="text-white font-medium">Aluguel</p>
+                  <p className="text-slate-400 text-sm">Pague para assistir por período limitado</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <div className="bg-red-600 text-white text-sm px-3 py-2 rounded-full font-medium flex items-center gap-1">
+                  🛒 Apple TV
+                </div>
+                <div>
+                  <p className="text-white font-medium">Compra</p>
+                  <p className="text-slate-400 text-sm">Compre para ter acesso permanente</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-slate-700 rounded-lg p-4">
+            <h4 className="text-white font-medium mb-3">🎯 Como usar:</h4>
+            <div className="space-y-2">
+              <p className="text-slate-300 text-sm">• <strong>Identifique o tipo:</strong> Pela cor do badge (verde/amarelo/vermelho)</p>
+              <p className="text-slate-300 text-sm">• <strong>Clique no badge:</strong> Vai direto para a plataforma de streaming</p>
+              <p className="text-slate-300 text-sm">• <strong>Compare opções:</strong> Veja todas as plataformas disponíveis</p>
+            </div>
+          </div>
+          
+          <div className="bg-slate-700 rounded-lg p-4">
+            <h4 className="text-white font-medium mb-3">🌟 Plataformas Suportadas:</h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+              <div className="bg-slate-600 rounded p-2 text-center">
+                <p className="text-red-400 font-medium">Netflix</p>
+              </div>
+              <div className="bg-slate-600 rounded p-2 text-center">
+                <p className="text-blue-400 font-medium">Amazon Prime</p>
+              </div>
+              <div className="bg-slate-600 rounded p-2 text-center">
+                <p className="text-blue-800 font-medium">Disney+</p>
+              </div>
+              <div className="bg-slate-600 rounded p-2 text-center">
+                <p className="text-purple-400 font-medium">HBO Max</p>
+              </div>
+              <div className="bg-slate-600 rounded p-2 text-center">
+                <p className="text-blue-700 font-medium">Globoplay</p>
+              </div>
+              <div className="bg-slate-600 rounded p-2 text-center">
+                <p className="text-yellow-600 font-medium">Telecine</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-gradient-to-r from-cyan-900/50 to-blue-900/50 rounded-lg p-4 border border-cyan-500/30">
+            <h4 className="text-white font-medium mb-2">💡 Dicas importantes:</h4>
+            <ul className="text-cyan-200 text-sm space-y-1">
+              <li>• Priorize opções "Incluído" para economizar</li>
+              <li>• Compare preços entre aluguel/compra/nova assinatura</li>
+              <li>• Verifique qualidade disponível (HD, 4K)</li>
+              <li>• Links diretos facilitam o acesso</li>
+            </ul>
+          </div>
+        </div>
+      )
+    },
+    {
       id: 'favorites',
       title: 'Sistema de Favoritos',
       description: 'Salve e organize seus filmes favoritos',
@@ -346,51 +435,57 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
       content: (
         <div className="space-y-4">
           <div className="bg-slate-700 rounded-lg p-4">
-            <h4 className="text-white font-medium mb-3">🤖 Como funciona a recomendação:</h4>
+            <h4 className="text-white font-medium mb-3">🧠 Sistema de Recomendação Avançado:</h4>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
                 <div className="bg-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-white text-sm font-bold">1</div>
                 <div>
-                  <p className="text-white font-medium">Analisa seus gostos</p>
-                  <p className="text-slate-400 text-sm">Baseado nos filmes que você busca</p>
+                  <p className="text-white font-medium">Análise de Perfil Completa</p>
+                  <p className="text-slate-400 text-sm">Analisa 6 dimensões: gêneros, diretores, décadas, avaliações, popularidade, duração</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <div className="bg-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-white text-sm font-bold">2</div>
                 <div>
-                  <p className="text-white font-medium">Identifica padrões</p>
-                  <p className="text-slate-400 text-sm">Gêneros favoritos, períodos, diretores</p>
+                  <p className="text-white font-medium">Sistema de Scoring Avançado</p>
+                  <p className="text-slate-400 text-sm">Algoritmo de pontuação com pesos otimizados</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <div className="bg-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-white text-sm font-bold">3</div>
                 <div>
-                  <p className="text-white font-medium">Sugere filmes similares</p>
-                  <p className="text-slate-400 text-sm">Diversificados e de qualidade</p>
+                  <p className="text-white font-medium">Diversificação Inteligente</p>
+                  <p className="text-slate-400 text-sm">Evita repetições e garante variedade otimizada</p>
                 </div>
               </div>
             </div>
           </div>
           
           <div className="bg-slate-700 rounded-lg p-4">
-            <h4 className="text-white font-medium mb-3">🎯 Tipos de recomendação:</h4>
+            <h4 className="text-white font-medium mb-3">🎯 Tipos de Recomendação:</h4>
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-slate-600 rounded p-2">
                 <p className="text-purple-400 font-medium text-sm">🧠 Inteligente</p>
-                <p className="text-slate-300 text-xs">Baseado nos seus gostos</p>
+                <p className="text-slate-300 text-xs">Baseado no seu perfil completo</p>
               </div>
               <div className="bg-slate-600 rounded p-2">
                 <p className="text-yellow-400 font-medium text-sm">⭐ Qualidade</p>
-                <p className="text-slate-300 text-xs">Bem avaliados</p>
+                <p className="text-slate-300 text-xs">Filmes bem avaliados compatíveis</p>
               </div>
               <div className="bg-slate-600 rounded p-2">
                 <p className="text-red-400 font-medium text-sm">🔥 Em Alta</p>
-                <p className="text-slate-300 text-xs">Populares agora</p>
+                <p className="text-slate-300 text-xs">Populares compatíveis com seu perfil</p>
               </div>
-              <div className="bg-slate-600 rounded p-2">
-                <p className="text-blue-400 font-medium text-sm">📅 Recentes</p>
-                <p className="text-slate-300 text-xs">Lançamentos</p>
-              </div>
+            </div>
+          </div>
+          
+          <div className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-lg p-4 border border-purple-500/30">
+            <h4 className="text-white font-medium mb-2">🧠 Tecnologia Avançada:</h4>
+            <div className="text-purple-200 text-sm space-y-1">
+              <p>• <strong>Análise de Perfil:</strong> 6 dimensões de preferência</p>
+              <p>• <strong>Anti-Repetição:</strong> Evita filmes duplicados entre categorias</p>
+              <p>• <strong>Diversificação:</strong> Garante variedade dentro das preferências</p>
+              <p>• <strong>Scoring Inteligente:</strong> Pesos otimizados por categoria</p>
             </div>
           </div>
         </div>
