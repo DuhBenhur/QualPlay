@@ -341,7 +341,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
             <div className="space-y-2">
               <p className="text-slate-300 text-sm">• <strong>Identifique o tipo:</strong> Pela cor do badge (verde/amarelo/vermelho)</p>
               <p className="text-slate-300 text-sm">• <strong>Clique no badge:</strong> Vai direto para a plataforma de streaming</p>
-              <p className="text-slate-300 text-sm">• <strong>Compare opções:</strong>Aproveite seus momentos de lazer vendo bons filmes</p>
+              <p className="text-slate-300 text-sm">• <strong>Compare opções:</strong> e prepare a pipoca para um ótimo filme! 🍿🍿</p>
             </div>
           </div>
           
