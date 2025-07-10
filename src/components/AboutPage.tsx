@@ -155,13 +155,15 @@ const AboutPage: React.FC = () => {
                 <p className="text-blue-400">Analista de dados e curioso na vida</p>
               </div>
             </div>
-            <p className="text-slate-300 leading-relaxed">
-              Olá! Sou o Eduardo, especialista em Digital Business e Data Science com uma paixão por tecnologia, boas IPAs 🍻, sambas 🎶 e resenhas com os amigos 🗣️.
-            <br/><br/>
-            O QualPlay é um exemplo prático da minha abordagem de desenvolvimento: unir expertise humana com o poder da Inteligência Artificial. Este projeto foi construído em uma colaboração sinérgica com ferramentas de IA Generativa, que atuaram como assistentes de codificação.
-            <br/><br/>
-            Meu papel foi o de arquiteto: definindo a estrutura, guiando a implementação, garantindo a qualidade do código, coesão da experiência do usuário e constantes refinamentos da engenharia de prompt. Este é o futuro do desenvolvimento de software — uma parceria inteligente onde a visão estratégica humana potencializa a velocidade da máquina.
-            </p>
+           <p className="text-slate-300 leading-relaxed">
+          Olá! Sou o Eduardo, especialista em Digital Business e Data Science com uma paixão por tecnologia, boas IPAs 🍻, sambas 🎶 e resenhas com os amigos 🗣️.
+          <br/><br/>
+          O QualPlay nasceu exatamente assim: de uma conversa entre amigos que evoluiu para um desafio. O que começou como um protótipo rápido em Python, feito para validar uma ideia, transformou-se em uma aplicação completa com a ajuda de ferramentas de IA Generativa.
+          <br/><br/>
+          Ele é o exemplo prático da minha abordagem de desenvolvimento: unir a visão humana com o poder da máquina. Nesse processo, meu papel foi o de arquiteto: definindo a estrutura, guiando a IA com engenharia de prompt e garantindo que a qualidade e a experiência do usuário fossem impecáveis.
+          <br/><br/>
+          Acredito que este é o futuro do desenvolvimento de software — uma parceria inteligente onde a estratégia humana potencializa a velocidade da máquina.
+          </p>
           </div>
         </div>
 
