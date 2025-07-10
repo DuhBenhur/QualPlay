@@ -219,11 +219,12 @@ const ContactPage: React.FC = () => {
               </div>
 
               <p className="text-slate-300 leading-relaxed mb-6">
-                Sou um Analista de Dados que acredita que ideias só valem a pena quando saem do papel. 
-                O 'Brincando com desenvolvimento Web' na minha descrição não é piada: este projeto é meu laboratório
-                para dar vida a pequenas ideias que vão contribuir para o desenvolvimento de habilidades para coisas
-                maiores e mais interessantes, transformando códigos complexos em algo útil e interativo. 
-                Meu objetivo é construir ferramentas que eu mesmo gostaria de usar.
+                Sou Eduardo, mas pode me chamar de Du. Como Analista de Dados,
+                acredito que ideias só ganham valor quando se tornam produtos reais. 
+                Este projeto é a prova disso: um laboratório onde transformo dados e códigos complexos
+                em ferramentas úteis e interativas. 
+                Meu objetivo é usar a tecnologia — da análise de dados à IA Generativa — para construir soluções
+                com a qualidade e a experiência que eu mesmo, como usuário, exijo e teria prazer em usar. Sinta-se à vontade para entrar em contato!
               </p>
 
               <div className="bg-slate-700 rounded-lg p-4 mb-6">
