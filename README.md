@@ -4,6 +4,8 @@ Uma aplicação web moderna e completa para descobrir, explorar e analisar filme
 
 ![QualPlay](public/seu_logo.png)
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/8f27ca82-1d27-48b0-b050-5b8fad5d3b7b/deploy-status)](https://app.netlify.com/projects/qualplay/deploys)
+
 ## 📖 A História do Projeto: Uma Jornada de Ideias e IA
 
 O **QualPlay** é mais do que um buscador de filmes; é o resultado de uma jornada de colaboração, aprendizado e da sinergia entre a inteligência humana e a artificial.
