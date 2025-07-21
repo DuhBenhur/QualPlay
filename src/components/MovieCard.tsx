@@ -89,7 +89,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, onFavoriteToggle 
   };
 
   const getStreamingBadgeColor = (service: string) => {
-    // 🎯 CORES BASEADAS NO TIPO DE DISPONIBILIDADE
+    // Cores baseadas no tipo de disponibilidade
     if (service.includes('(Incluído)')) {
       return 'bg-green-600'; // Verde = incluído na assinatura
     }

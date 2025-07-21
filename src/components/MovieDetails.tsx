@@ -1,7 +1,8 @@
 import React from 'react';
-import { X, Star, Calendar, Clock, Users, Play, Download, ExternalLink } from 'lucide-react';
+import { X, Star, Calendar, Clock, Users, Play, Download, ExternalLink, Check, Eye, EyeOff, Clock3 } from 'lucide-react';
 import { MovieDetails as MovieDetailsType } from '../types/movie';
 import { getImageUrl } from '../services/tmdbApi';
+import { useAuth } from '../contexts/AuthContext';
 
 interface MovieDetailsProps {
   movie: MovieDetailsType;
@@ -9,6 +10,7 @@ interface MovieDetailsProps {
 }
 
 const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
+
   const formatDate = (dateString: string) => {
     if (!dateString) return 'Data não informada';
     try {
@@ -309,27 +311,29 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
               )}
               
               <div className="flex gap-3">
-                <button 
-                  onClick={handleWatchTrailer}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  <Play size={16} />
-                  Assistir Trailer
-                </button>
-                <button 
-                  onClick={handleSaveMovie}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-                >
-                  <Download size={16} />
-                  Salvar
-                </button>
-                <button 
-                  onClick={() => window.open(`https://www.themoviedb.org/movie/${safeMovie.id}`, '_blank')}
-                  className="flex items-center gap-2 px-4 py-2 bg-slate-600 text-white rounded-md hover:bg-slate-700 transition-colors"
-                >
-                  <ExternalLink size={16} />
-                  Ver no TMDB
-                </button>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={handleWatchTrailer}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    <Play size={16} />
+                    Assistir Trailer
+                  </button>
+                  <button 
+                    onClick={handleSaveMovie}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    <Download size={16} />
+                    Salvar
+                  </button>
+                  <button 
+                    onClick={() => window.open(`https://www.themoviedb.org/movie/${safeMovie.id}`, '_blank')}
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-600 text-white rounded-md hover:bg-slate-700 transition-colors"
+                  >
+                    <ExternalLink size={16} />
+                    Ver no TMDB
+                  </button>
+                </div>
               </div>
             </div>
           </div>

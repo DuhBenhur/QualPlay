@@ -47,7 +47,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
     };
   };
 
-  // 🚀 BUSCA INSTANTÂNEA COM ENTER - CORRIGIDA
+  // Busca instantânea com Enter
   const handleInstantSearch = (term: string, type: 'movie' | 'director') => {
     if (!term.trim()) return;
     
@@ -60,19 +60,19 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
     };
 
     if (type === 'movie') {
-      console.log(`🎬 Busca instantânea de filme: "${term}"`);
-      // CORRIGIDO: Incluir filmes da lista + o termo digitado
+      console.log(`Busca instantânea de filme: "${term}"`);
+      // Incluir filmes da lista + o termo digitado
       const allMovieNames = [...movieNames, term.trim()];
       onSearch(allMovieNames, directorNames, filters);
     } else {
-      console.log(`🎭 Busca instantânea de diretor: "${term}"`);
-      // CORRIGIDO: Incluir diretores da lista + o termo digitado
+      console.log(`Busca instantânea de diretor: "${term}"`);
+      // Incluir diretores da lista + o termo digitado
       const allDirectorNames = [...directorNames, term.trim()];
       onSearch(movieNames, allDirectorNames, filters);
     }
   };
 
-  // 🎬 ADICIONAR À LISTA (comportamento do + e Tab)
+  // Adicionar à lista (comportamento do + e Tab)
   const addMovie = () => {
     if (movieInput.trim() && !movieNames.includes(movieInput.trim())) {
       setMovieNames([...movieNames, movieInput.trim()]);
@@ -87,7 +87,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
     }
   };
 
-  // 🎯 MANIPULAÇÃO DE TECLAS MELHORADA
+  // Manipulação de teclas
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, type: 'movie' | 'director') => {
     const value = type === 'movie' ? movieInput.trim() : directorInput.trim();
     
@@ -130,7 +130,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
     );
   };
 
-  // 🔍 BUSCA COMBINADA (comportamento atual do botão principal)
+  // Busca combinada (comportamento do botão principal)
   const handleCombinedSearch = () => {
     const filters: SearchFilters = {
       genres: selectedGenres,
@@ -162,6 +162,8 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
     { value: 'revenue.desc', label: 'Maior Bilheteria' },
   ];
 
+  const hasItemsInList = movieNames.length > 0 || directorNames.length > 0;
+
   return (
     <div className="h-full flex flex-col">
       {/* Header Compacto */}
@@ -189,7 +191,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
           <div className="space-y-4">
             <h2 className="text-base md:text-lg font-semibold text-white">Busca Básica</h2>
             
-            {/* Movie Names */}
+            {/* Movie Input */}
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Nomes dos Filmes
@@ -232,7 +234,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
               )}
             </div>
 
-            {/* Director Names */}
+            {/* Director Input */}
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Nomes dos Diretores
@@ -276,7 +278,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
             </div>
           </div>
 
-          {/* 📁 UPLOAD DE LISTA */}
+          {/* Upload de Lista */}
           <div className="border-t border-slate-600 pt-4">
             <FileUpload onFilesProcessed={onFilesProcessed} />
           </div>

@@ -10,10 +10,15 @@ import { MovieDetails } from '../types/movie';
 
 interface DataVisualizationDashboardProps {
   movies: MovieDetails[];
+  onGenreFilter?: (genreId: number | null) => void;
 }
 
-const DataVisualizationDashboard: React.FC<DataVisualizationDashboardProps> = ({ movies }) => {
+const DataVisualizationDashboard: React.FC<DataVisualizationDashboardProps> = ({ 
+  movies, 
+  onGenreFilter 
+}) => {
   const [activeChart, setActiveChart] = useState<string>('overview');
+  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
 
   // Cores personalizadas para os gráficos
   const colors = [
@@ -252,6 +257,27 @@ const DataVisualizationDashboard: React.FC<DataVisualizationDashboardProps> = ({
     return null;
   };
 
+  // Função para lidar com clique em um gênero
+  const handleGenreClick = (genreName: string) => {
+    if (selectedGenre === genreName) {
+      // Se clicar no mesmo gênero, desseleciona
+      setSelectedGenre(null);
+      if (onGenreFilter) {
+        onGenreFilter(null);
+      }
+    } else {
+      // Seleciona o gênero clicado
+      setSelectedGenre(genreName);
+      
+      // Encontrar o ID do gênero pelo nome
+      if (onGenreFilter) {
+        const genreId = movies.flatMap(movie => movie.genres)
+          .find(genre => genre.name === genreName)?.id || null;
+        onGenreFilter(genreId);
+      }
+    }
+  };
+
   return (
     <div className="bg-slate-800 rounded-lg p-6 mb-6">
       <div className="flex items-center justify-between mb-6">
@@ -357,18 +383,42 @@ const DataVisualizationDashboard: React.FC<DataVisualizationDashboardProps> = ({
       {/* Gráfico de Pizza - Gêneros */}
       {activeChart === 'genres' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Gráfico de Barras Horizontais */}
+          {/* Gráfico de Barras Horizontais Interativo */}
           <div className="bg-slate-700 rounded-lg p-4">
-            <h4 className="text-white font-semibold mb-4">Distribuição por Gênero</h4>
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-white font-semibold">Distribuição por Gênero</h4>
+              {selectedGenre && (
+                <button
+                  onClick={() => handleGenreClick(selectedGenre)}
+                  className="text-xs bg-blue-600 text-white px-2 py-1 rounded-full flex items-center gap-1"
+                >
+                  {selectedGenre} <span className="font-bold">×</span>
+                </button>
+              )}
+            </div>
             <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={analytics.genreData.slice(0, 10)}>
+              <BarChart 
+                data={analytics.genreData.slice(0, 10)}
+                onClick={(data) => data && handleGenreClick(data.activeLabel as string)}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="name" stroke="#9CA3AF" angle={-45} textAnchor="end" height={80} />
                 <YAxis stroke="#9CA3AF" />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" fill="#3B82F6" />
+                <Bar 
+                  dataKey="value" 
+                  fill="#3B82F6"
+                  cursor="pointer"
+                  // Destacar o gênero selecionado
+                  fillOpacity={(entry) => entry.name === selectedGenre ? 1 : 0.7}
+                  // Mudar a cor do gênero selecionado
+                  fill={(entry) => entry.name === selectedGenre ? '#8B5CF6' : '#3B82F6'}
+                />
               </BarChart>
             </ResponsiveContainer>
+            <div className="mt-2 text-center text-slate-400 text-sm">
+              Clique em um gênero para filtrar os filmes
+            </div>
           </div>
 
           {/* Composição Visual com Percentuais */}
@@ -407,7 +457,15 @@ const DataVisualizationDashboard: React.FC<DataVisualizationDashboardProps> = ({
               {/* Lista Detalhada com Percentuais */}
               <div className="max-h-80 overflow-y-auto space-y-2">
                 {analytics.genreData.map((genre, index) => (
-                  <div key={genre.name} className="flex items-center justify-between p-2 bg-slate-600 rounded-lg hover:bg-slate-500 transition-colors">
+                  <div 
+                    key={genre.name} 
+                    className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
+                      genre.name === selectedGenre 
+                        ? 'bg-blue-700 hover:bg-blue-600' 
+                        : 'bg-slate-600 hover:bg-slate-500'
+                    }`}
+                    onClick={() => handleGenreClick(genre.name)}
+                  >
                     <div className="flex items-center gap-3">
                       <div 
                         className="w-4 h-4 rounded-full flex-shrink-0"
@@ -427,9 +485,22 @@ const DataVisualizationDashboard: React.FC<DataVisualizationDashboardProps> = ({
               <div className="mt-4 p-3 bg-slate-600 rounded-lg">
                 <h5 className="text-white font-medium mb-2">📊 Insights</h5>
                 <div className="text-sm text-slate-300 space-y-1">
-                  <p>• <strong>Gênero dominante:</strong> {analytics.genreData[0]?.name} ({analytics.genreData[0]?.percentage}%)</p>
+                  <p>
+                    • <strong>Gênero dominante:</strong> {analytics.genreData[0]?.name} ({analytics.genreData[0]?.percentage}%)
+                    <button 
+                      onClick={() => handleGenreClick(analytics.genreData[0]?.name)}
+                      className="ml-2 text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full hover:bg-blue-700"
+                    >
+                      Filtrar
+                    </button>
+                  </p>
                   <p>• <strong>Top 3 representam:</strong> {analytics.genreData.slice(0, 3).reduce((sum, g) => sum + parseFloat(g.percentage), 0).toFixed(1)}% da coleção</p>
                   <p>• <strong>Diversidade:</strong> {analytics.genreData.length} gêneros diferentes</p>
+                  {selectedGenre && (
+                    <p className="text-blue-300">
+                      • <strong>Filtro ativo:</strong> Mostrando apenas filmes do gênero {selectedGenre}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -440,13 +511,24 @@ const DataVisualizationDashboard: React.FC<DataVisualizationDashboardProps> = ({
       {/* Treemap */}
       {activeChart === 'treemap' && (
         <div className="bg-slate-700 rounded-lg p-4">
-          <h4 className="text-white font-semibold mb-4">Hierarquia de Gêneros</h4>
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-white font-semibold">Hierarquia de Gêneros</h4>
+            {selectedGenre && (
+              <button
+                onClick={() => handleGenreClick(selectedGenre)}
+                className="text-xs bg-blue-600 text-white px-2 py-1 rounded-full flex items-center gap-1"
+              >
+                {selectedGenre} <span className="font-bold">×</span>
+              </button>
+            )}
+          </div>
           <ResponsiveContainer width="100%" height={500}>
             <Treemap
               data={analytics.treemapData}
               dataKey="size"
               stroke="#374151"
               fill="#8884d8"
+              onClick={(data) => data && handleGenreClick(data.name)}
             >
               <Tooltip 
                 content={({ active, payload }) => {
@@ -464,6 +546,9 @@ const DataVisualizationDashboard: React.FC<DataVisualizationDashboardProps> = ({
               />
             </Treemap>
           </ResponsiveContainer>
+          <div className="mt-2 text-center text-slate-400 text-sm">
+            Clique em um gênero para filtrar os filmes
+          </div>
         </div>
       )}
 
@@ -651,10 +736,26 @@ const DataVisualizationDashboard: React.FC<DataVisualizationDashboardProps> = ({
       {activeChart === 'statistics' && (
         <div className="space-y-6">
           <div className="bg-slate-700 rounded-lg p-6">
-            <h4 className="text-white font-semibold mb-6 text-center">📊 Análise Estatística por Gênero</h4>
+            <div className="flex items-center justify-between mb-6">
+              <h4 className="text-white font-semibold text-center">📊 Análise Estatística por Gênero</h4>
+              {selectedGenre && (
+                <button
+                  onClick={() => handleGenreClick(selectedGenre)}
+                  className="text-xs bg-blue-600 text-white px-2 py-1 rounded-full flex items-center gap-1"
+                >
+                  {selectedGenre} <span className="font-bold">×</span>
+                </button>
+              )}
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {analytics.genreStatistics.map((stat, index) => (
-                <div key={stat.genre} className="bg-slate-600 rounded-lg p-4">
+                <div 
+                  key={stat.genre} 
+                  className={`bg-slate-600 rounded-lg p-4 cursor-pointer transition-colors ${
+                    stat.genre === selectedGenre ? 'ring-2 ring-blue-500 bg-slate-500' : 'hover:bg-slate-500'
+                  }`}
+                  onClick={() => handleGenreClick(stat.genre)}
+                >
                   <h5 className="text-white font-medium mb-3 flex items-center gap-2">
                     <div 
                       className="w-3 h-3 rounded-full"
@@ -697,7 +798,10 @@ const DataVisualizationDashboard: React.FC<DataVisualizationDashboardProps> = ({
           <div className="bg-slate-700 rounded-lg p-6">
             <h4 className="text-white font-semibold mb-4">Comparação de Avaliações por Gênero</h4>
             <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={analytics.boxPlotData}>
+              <BarChart 
+                data={analytics.boxPlotData}
+                onClick={(data) => data && handleGenreClick(data.activeLabel as string)}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="genre" stroke="#9CA3AF" angle={-45} textAnchor="end" height={80} />
                 <YAxis stroke="#9CA3AF" />
@@ -726,6 +830,9 @@ const DataVisualizationDashboard: React.FC<DataVisualizationDashboardProps> = ({
                 <Bar dataKey="median" fill="#3B82F6" name="Mediana" />
               </BarChart>
             </ResponsiveContainer>
+            <div className="mt-2 text-center text-slate-400 text-sm">
+              Clique em um gênero para filtrar os filmes
+            </div>
           </div>
 
           {/* Insights */}
@@ -739,8 +846,14 @@ const DataVisualizationDashboard: React.FC<DataVisualizationDashboardProps> = ({
                     .sort((a, b) => (b.ratings?.mean || 0) - (a.ratings?.mean || 0))
                     .slice(0, 3)
                     .map((stat, index) => (
-                      <div key={stat.genre} className="flex justify-between items-center">
-                        <span className="text-slate-300">{index + 1}. {stat.genre}</span>
+                      <div 
+                        key={stat.genre} 
+                        className="flex justify-between items-center cursor-pointer hover:bg-slate-600 p-1 rounded"
+                        onClick={() => handleGenreClick(stat.genre)}
+                      >
+                        <span className={`${stat.genre === selectedGenre ? 'text-blue-300 font-medium' : 'text-slate-300'}`}>
+                          {index + 1}. {stat.genre}
+                        </span>
                         <span className="text-yellow-400 font-medium">{stat.ratings?.mean.toFixed(1)}</span>
                       </div>
                     ))}
@@ -754,8 +867,14 @@ const DataVisualizationDashboard: React.FC<DataVisualizationDashboardProps> = ({
                     .sort((a, b) => (a.ratings?.std || 0) - (b.ratings?.std || 0))
                     .slice(0, 3)
                     .map((stat, index) => (
-                      <div key={stat.genre} className="flex justify-between items-center">
-                        <span className="text-slate-300">{index + 1}. {stat.genre}</span>
+                      <div 
+                        key={stat.genre} 
+                        className="flex justify-between items-center cursor-pointer hover:bg-slate-600 p-1 rounded"
+                        onClick={() => handleGenreClick(stat.genre)}
+                      >
+                        <span className={`${stat.genre === selectedGenre ? 'text-blue-300 font-medium' : 'text-slate-300'}`}>
+                          {index + 1}. {stat.genre}
+                        </span>
                         <span className="text-green-400 font-medium">σ = {stat.ratings?.std.toFixed(2)}</span>
                       </div>
                     ))}
@@ -763,6 +882,27 @@ const DataVisualizationDashboard: React.FC<DataVisualizationDashboardProps> = ({
               </div>
             </div>
           </div>
+          
+          {/* Filtro ativo */}
+          {selectedGenre && (
+            <div className="bg-blue-900/30 border border-blue-500/30 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                  <h4 className="text-white font-medium">Filtro ativo: {selectedGenre}</h4>
+                </div>
+                <button
+                  onClick={() => handleGenreClick(selectedGenre)}
+                  className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
+                >
+                  Limpar filtro
+                </button>
+              </div>
+              <p className="text-slate-300 text-sm mt-2">
+                Os filmes exibidos abaixo foram filtrados para mostrar apenas o gênero selecionado.
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

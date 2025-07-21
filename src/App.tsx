@@ -12,10 +12,17 @@ import ContactPage from './components/ContactPage';
 import SavedMovies from './components/SavedMovies';
 import RecommendationEngine from './components/RecommendationEngine';
 import Tutorial from './components/Tutorial';
+import LoginModal from './components/Auth/LoginModal';
+import { useAuth } from './contexts/AuthContext';
 import { MovieDetails as MovieDetailsType, SearchFilters } from './types/movie';
 import { searchMoviesAndDirectors, getMovieDetails } from './services/tmdbApi';
 
+// Import the missing components
+import UserMovieStats from './components/UserMovieStats'; 
+import UserMovieList from './components/UserMovieList'; 
+
 function App() {
+  const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState<'home' | 'about' | 'contact'>('home');
   const [movies, setMovies] = useState<MovieDetailsType[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<MovieDetailsType | null>(null);
@@ -24,6 +31,7 @@ function App() {
   const [hasSearched, setHasSearched] = useState(false);
   const [savedMoviesCount, setSavedMoviesCount] = useState(0);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Verificar se é a primeira visita para mostrar tutorial
   useEffect(() => {
@@ -97,31 +105,11 @@ function App() {
   const handleMovieClick = (movie: MovieDetailsType) => {
     setSelectedMovie(movie);
   };
-
+  
   const handleSavedMovieClick = async (movieId: number) => {
     try {
       const movieDetails = await getMovieDetails(movieId);
-      // Busca dados completos do filme
-      const fullMovie = {
-        id: movieId,
-        title: movieDetails.title || 'Título não disponível',
-        overview: movieDetails.overview || '',
-        poster_path: movieDetails.poster_path || null,
-        backdrop_path: movieDetails.backdrop_path || null,
-        release_date: movieDetails.release_date || '',
-        vote_average: movieDetails.vote_average || 0,
-        vote_count: movieDetails.vote_count || 0,
-        popularity: movieDetails.popularity || 0,
-        adult: movieDetails.adult || false,
-        original_language: movieDetails.original_language || '',
-        original_title: movieDetails.original_title || '',
-        video: movieDetails.video || false,
-        genre_ids: movieDetails.genre_ids || [],
-        genres: movieDetails.genres || [],
-        ...movieDetails
-      } as MovieDetailsType;
-      
-      setSelectedMovie(fullMovie);
+      setSelectedMovie(movieDetails);
     } catch (error) {
       console.error('Failed to load movie details:', error);
     }
@@ -151,11 +139,16 @@ function App() {
           currentPage={currentPage} 
           onPageChange={setCurrentPage}
           onOpenTutorial={() => setShowTutorial(true)}
+          onLogin={() => setShowLoginModal(true)}
         />
         <AboutPage />
         <Tutorial 
           isOpen={showTutorial} 
           onClose={handleCloseTutorial} 
+        />
+        <LoginModal 
+          isOpen={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
         />
       </>
     );
@@ -168,11 +161,16 @@ function App() {
           currentPage={currentPage} 
           onPageChange={setCurrentPage}
           onOpenTutorial={() => setShowTutorial(true)}
+          onLogin={() => setShowLoginModal(true)}
         />
         <ContactPage />
         <Tutorial 
           isOpen={showTutorial} 
           onClose={handleCloseTutorial} 
+        />
+        <LoginModal 
+          isOpen={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
         />
       </>
     );
@@ -184,6 +182,7 @@ function App() {
         currentPage={currentPage} 
         onPageChange={setCurrentPage}
         onOpenTutorial={() => setShowTutorial(true)}
+        onLogin={() => setShowLoginModal(true)}
       />
       
       <div className="flex flex-col md:flex-row">
@@ -199,11 +198,17 @@ function App() {
         
         <main className="flex-1 p-3 md:p-6">
           <div className="max-w-7xl mx-auto">
+            {/* Estatísticas do usuário (se logado) */}
+            {user && <UserMovieStats />}
+            
+            {/* Lista de filmes do usuário (se logado) */}
+            {user && <UserMovieList onMovieClick={handleSavedMovieClick} />}
+            
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <Film className="text-blue-400" size={32} />
-                  <h1 className="text-2xl font-bold text-white">
+                  <Film className="text-blue-400" size={32} /> 
+                  <h1 className="text-2xl font-bold text-white"> 
                     Resultados da Busca
                   </h1>
                 </div>
@@ -263,7 +268,12 @@ function App() {
             
             {!isLoading && movies.length > 0 && (
               <>
-               {viewMode === 'grid' ? (
+                {/* Mostrar estatísticas do usuário se estiver logado */}
+                {/* Componente UserMovieStats será implementado depois */}
+                
+                <DataVisualizationDashboard movies={movies} />
+                
+                {viewMode === 'grid' ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-8">
                     {movies.map((movie) => (
                       <MovieCard
@@ -285,10 +295,6 @@ function App() {
                     />
                   </div>
                 )}
-                
-                <DataVisualizationDashboard movies={movies} />
-                
-               
 
                 <RecommendationEngine 
                   watchedMovies={movies}
@@ -311,6 +317,9 @@ function App() {
             
             {!isLoading && !hasSearched && (
               <div className="text-center py-12">
+                {/* Mostrar lista de filmes do usuário se estiver logado */}
+                {/* Componente UserMovieList será implementado depois */}
+                
                 <Film className="mx-auto text-slate-600 mb-4" size={64} />
                 <h2 className="text-lg md:text-xl font-semibold text-white mb-2">
                   Bem-vindo ao QualPlay
@@ -344,6 +353,11 @@ function App() {
       <Tutorial 
         isOpen={showTutorial} 
         onClose={handleCloseTutorial} 
+      />
+      
+      <LoginModal 
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
       />
     </div>
   );
