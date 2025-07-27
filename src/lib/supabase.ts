@@ -5,10 +5,12 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://seu-projeto.supabase.co'
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('⚠️ Variáveis de ambiente do Supabase não encontradas!')
-  console.error('Por favor, verifique se o arquivo .env está configurado corretamente')
-  console.error('VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY são necessários')
+if (!supabaseUrl || supabaseUrl === 'https://seu-projeto.supabase.co') {
+  console.error('⚠️ VITE_SUPABASE_URL não configurada corretamente!')
+}
+
+if (!supabaseAnonKey || supabaseAnonKey === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...') {
+  console.error('⚠️ VITE_SUPABASE_ANON_KEY não configurada corretamente!')
 }
 
 // Criar cliente com opções adicionais
@@ -57,23 +59,9 @@ if (typeof window !== 'undefined') {
   checkConfirmationToken();
 }
 
-// Log para debug
-console.log('Supabase inicializado com URL:', supabaseUrl ? (supabaseUrl.substring(0, 20) + '...') : 'INDEFINIDA')
-console.log('Chave anônima definida:', supabaseAnonKey ? 'SIM' : 'NÃO')
 
-// Verificar conexão
-supabase.auth.getSession().then(({ data, error }) => {
-  if (error) {
-    console.error('❌ Erro ao conectar com Supabase:', error.message)
-  } else {
-    console.log('✅ Conexão com Supabase estabelecida com sucesso')
-    console.log('✅ Sessão atual:', data.session ? 'Ativa' : 'Inativa')
-    
-    if (data.session) {
-      console.log('✅ Usuário autenticado:', data.session.user.email)
-    }
-  }
-})
+
+
 
 // Tipos para o banco de dados
 export interface Profile {

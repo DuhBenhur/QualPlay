@@ -1,16 +1,36 @@
 import React, { useState } from 'react'
 import { User, Settings, LogOut, BarChart3, Heart, List } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
+import { supabase } from '../../lib/supabase'
 
 const UserMenu: React.FC = () => {
   const { user, profile, signOut } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
 
-  if (!user || !profile) return null
+  if (!user) return null;
+
+  const displayName = profile?.full_name || user.email?.split('@')[0] || 'Usuário';
+  const avatarUrl = profile?.avatar_url;
 
   const handleSignOut = async () => {
-    await signOut()
-    setIsOpen(false)
+    try {
+      // Limpar localStorage
+      localStorage.clear();
+      
+      // Tentar logout do Supabase (sem esperar)
+      supabase.auth.signOut().catch(() => {});
+      
+      // Fechar menu
+      setIsOpen(false);
+      
+      // Forçar logout imediatamente
+      window.location.href = '/';
+      
+    } catch (error) {
+      // Mesmo com erro, forçar logout
+      localStorage.clear();
+      window.location.href = '/';
+    }
   }
 
   return (
@@ -19,10 +39,10 @@ const UserMenu: React.FC = () => {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-2 text-slate-300 hover:text-white transition-colors rounded-md hover:bg-slate-700"
       >
-        {profile.avatar_url ? (
+        {avatarUrl ? (
           <img
-            src={profile.avatar_url}
-            alt={profile.full_name || 'User'}
+            src={avatarUrl}
+            alt={displayName}
             className="w-8 h-8 rounded-full object-cover"
           />
         ) : (
@@ -31,7 +51,7 @@ const UserMenu: React.FC = () => {
           </div>
         )}
         <span className="hidden sm:inline text-sm">
-          {profile.full_name || user.email?.split('@')[0]}
+          {displayName}
         </span>
       </button>
 
@@ -39,16 +59,25 @@ const UserMenu: React.FC = () => {
         <>
           <div
             className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
+            onClick={(e) => {
+              console.log('Overlay clicado - fechando menu');
+              setIsOpen(false);
+            }}
           />
-          <div className="absolute right-0 top-full mt-1 w-64 bg-slate-800 border border-slate-700 rounded-md shadow-lg z-50">
+          <div 
+            className="absolute right-0 top-full mt-1 w-64 bg-slate-800 border border-slate-700 rounded-md shadow-lg z-50"
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log('Menu clicado - mantendo aberto');
+            }}
+          >
             {/* User Info */}
             <div className="p-4 border-b border-slate-700">
               <div className="flex items-center gap-3">
-                {profile.avatar_url ? (
+                {avatarUrl ? (
                   <img
-                    src={profile.avatar_url}
-                    alt={profile.full_name || 'User'}
+                    src={avatarUrl}
+                    alt={displayName}
                     className="w-12 h-12 rounded-full object-cover"
                   />
                 ) : (
@@ -58,7 +87,7 @@ const UserMenu: React.FC = () => {
                 )}
                 <div>
                   <p className="text-white font-medium">
-                    {profile.full_name || 'Usuário'}
+                    {displayName}
                   </p>
                   <p className="text-slate-400 text-sm">{user.email}</p>
                 </div>
@@ -91,7 +120,12 @@ const UserMenu: React.FC = () => {
             {/* Sign Out */}
             <div className="border-t border-slate-700 py-2">
               <button
-                onClick={handleSignOut}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Botão Sair clicado - evento capturado');
+                  handleSignOut();
+                }}
                 className="w-full flex items-center gap-3 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-slate-700 transition-colors"
               >
                 <LogOut size={16} />

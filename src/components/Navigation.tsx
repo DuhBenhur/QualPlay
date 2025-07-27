@@ -1,7 +1,7 @@
 import React from 'react';
 import { Film, Info, MessageSquare, Home, HelpCircle, LogIn } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-// import UserMenu from './Auth/UserMenu';
+import UserMenu from './Auth/UserMenu';
 // import LanguageSelector from './LanguageSelector';
 
 interface NavigationProps {
@@ -81,17 +81,7 @@ const Navigation: React.FC<NavigationProps> = ({
             )}
             
             {user ? (
-              // <UserMenu />
-              <div className="flex items-center gap-2 px-3 py-2 text-slate-300 hover:text-white transition-colors rounded-md hover:bg-slate-700">
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">
-                    {user.email?.charAt(0).toUpperCase() || 'U'}
-                  </span>
-                </div>
-                <span className="hidden sm:inline text-sm">
-                  {user.email?.split('@')[0] || 'Usuário'}
-                </span>
-              </div>
+              <UserMenu />
             ) : (
               <button
                 onClick={onLogin}

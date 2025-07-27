@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { X, Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
+import { supabase } from '../../lib/supabase'
 
 interface LoginModalProps {
   isOpen: boolean
@@ -114,6 +115,26 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     }))
   }
 
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setMessage({text: '', type: 'error'});
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (error) {
+        setMessage({text: error.message, type: 'error'});
+      }
+    } catch (err) {
+      setMessage({text: 'Erro ao fazer login com Google', type: 'error'});
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!isOpen) return null
 
   return (
@@ -132,6 +153,16 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             <X size={24} />
           </button>
         </div>
+
+        {/* Botão de login social */}
+        <button
+          onClick={handleGoogleLogin}
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-2 py-3 mb-4 bg-white text-slate-800 rounded-md border border-slate-300 hover:bg-slate-100 transition-colors font-medium shadow-sm"
+        >
+          <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
+          Entrar com Google
+        </button>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">

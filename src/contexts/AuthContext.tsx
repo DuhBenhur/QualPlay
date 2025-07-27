@@ -198,19 +198,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Verificar se o erro é de email não confirmado
         if (error.message.includes('Email not confirmed')) {
-          console.log('Email não confirmado. Tentando confirmar automaticamente...')
-          
-          try {
-            // Tentar confirmar o email automaticamente (apenas para desenvolvimento)
-            const { data: userData } = await supabase.auth.admin.getUserByEmail(email)
-            if (userData?.user) {
-              console.log('Usuário encontrado, tentando confirmar email...')
-              // Esta parte não funcionará no frontend, é apenas para mostrar a intenção
-              // Em produção, o usuário precisaria clicar no link de confirmação
-            }
-          } catch (confirmError) {
-            console.error('Erro ao tentar confirmar email:', confirmError)
-          }
+          console.log('Email não confirmado. Verifique sua caixa de entrada para confirmar o email.')
         }
         
         return { error }
@@ -255,7 +243,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        throw error;
+      }
+      
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      
+    } catch (error) {
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      throw error;
+    }
   }
   
   // Função para verificar se o email está confirmado
@@ -323,7 +327,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {/* Adicionar log para debug */}
       {process.env.NODE_ENV === 'development' && (
         <div className="hidden">
-          {console.log('AuthContext state:', { user, profile, session, loading })}
+          {/* eslint-disable-next-line no-console */}
+          <>{console.log('AuthContext state:', { user, profile, session, loading })}</>
         </div>
       )}
     </AuthContext.Provider>
