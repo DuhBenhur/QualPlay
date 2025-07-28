@@ -21,7 +21,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
 
+
+
   useEffect(() => {
+    // Verificar se o Supabase está disponível
+    if (!supabase) {
+      console.log('Supabase não disponível, pulando inicialização de autenticação');
+      setLoading(false);
+      return;
+    }
+
     // Verificar sessão atual
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
@@ -53,6 +62,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   const loadProfile = async (userId: string) => {
+    if (!supabase) {
+      console.log('Supabase não disponível, pulando carregamento de perfil');
+      return;
+    }
+
     try {
       console.log('Carregando perfil para usuário:', userId)
       const { data, error } = await supabase

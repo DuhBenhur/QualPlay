@@ -37,7 +37,29 @@ const supabase = (isSupabaseConfigured && !isNetlify) ? createClient(supabaseUrl
     flowType: 'pkce',
     debug: false // Desabilitar debug no Netlify
   }
-}) : null
+}) : {
+  auth: {
+    getSession: async () => ({ data: { session: null } }),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    signUp: async () => ({ data: null, error: { message: 'Autenticação não disponível' } }),
+    signIn: async () => ({ data: null, error: { message: 'Autenticação não disponível' } }),
+    signOut: async () => ({ error: null }),
+    getUser: async () => ({ data: { user: null } }),
+    verifyOtp: async () => ({ error: { message: 'Autenticação não disponível' } })
+  },
+  from: () => ({
+    select: () => ({
+      eq: () => ({
+        single: async () => ({ data: null, error: { message: 'Autenticação não disponível' } })
+      })
+    }),
+    update: () => ({
+      eq: async () => ({ error: { message: 'Autenticação não disponível' } })
+    }),
+    insert: async () => ({ error: { message: 'Autenticação não disponível' } }),
+    upsert: async () => ({ error: { message: 'Autenticação não disponível' } })
+  })
+}
 
 // Verificar se há token de confirmação na URL
 // Isso é necessário para processar a confirmação de email
