@@ -16,6 +16,23 @@ const isNetlify = typeof window !== 'undefined' &&
   (window.location.hostname.includes('netlify.app') || 
    window.location.hostname.includes('netlify.com'))
 
+// Proteção adicional para URLs inválidas no Netlify
+const safeCreateClient = (url: string, key: string, options?: any) => {
+  try {
+    // Validar URL antes de criar o cliente
+    if (!url || url === 'about:blank' || url === 'undefined' || url === 'null') {
+      console.warn('URL do Supabase inválida detectada, usando fallback');
+      url = 'https://vbogtbtfnwjyemloxgky.supabase.co';
+    }
+    
+    return createClient(url, key, options);
+  } catch (error) {
+    console.error('Erro ao criar cliente Supabase:', error);
+    // Retornar cliente com URL de fallback
+    return createClient('https://vbogtbtfnwjyemloxgky.supabase.co', key, options);
+  }
+};
+
 if (!isSupabaseConfigured) {
   console.error('⚠️ Supabase não configurado corretamente!')
   console.error('Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no Netlify')
@@ -26,7 +43,7 @@ if (isNetlify) {
 }
 
 // Criar cliente apenas se as variáveis estiverem configuradas
-const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey, {
+const supabase = isSupabaseConfigured ? safeCreateClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
@@ -34,7 +51,15 @@ const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKe
     storageKey: 'qualplay-auth',
     storage: localStorage,
     flowType: 'pkce',
-    debug: false // Desabilitar debug no Netlify
+    debug: false, // Desabilitar debug no Netlify
+    onAuthStateChange: (event: any, session: any) => {
+      // Proteção adicional para mudanças de estado de auth
+      try {
+        console.log('Auth state change:', event, session?.user?.email);
+      } catch (error) {
+        console.warn('Erro ao processar mudança de auth state:', error);
+      }
+    }
   }
 }) : {
   auth: {

@@ -10,10 +10,28 @@ const originalURL = window.URL;
 window.URL = class SafeURL extends originalURL {
   constructor(input: string | URL, base?: string | URL) {
     try {
+      // Validar input antes de chamar o construtor original
+      if (typeof input === 'string') {
+        // Verificar se é uma URL válida
+        if (!input || input === 'about:blank' || input === 'undefined' || input === 'null') {
+          console.warn('URL inválida detectada, usando fallback:', input);
+          super('https://qualplay.netlify.app');
+          return;
+        }
+        
+        // Tentar criar URL temporariamente para validar
+        try {
+          new originalURL(input, base);
+        } catch {
+          console.warn('URL inválida detectada, usando fallback:', input);
+          super('https://qualplay.netlify.app');
+          return;
+        }
+      }
+      
       super(input, base);
     } catch (error) {
-      console.warn('URL inválida detectada, usando fallback:', input);
-      // Retornar uma URL válida como fallback
+      console.warn('Erro ao criar URL, usando fallback:', error);
       super('https://qualplay.netlify.app');
     }
   }
