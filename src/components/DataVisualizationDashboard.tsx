@@ -405,14 +405,10 @@ const DataVisualizationDashboard: React.FC<DataVisualizationDashboardProps> = ({
                 <XAxis dataKey="name" stroke="#9CA3AF" angle={-45} textAnchor="end" height={80} />
                 <YAxis stroke="#9CA3AF" />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar 
-                  dataKey="value" 
-                  fill="#3B82F6"
+                                <Bar
+                  dataKey="value"
                   cursor="pointer"
-                  // Destacar o gênero selecionado
-                  fillOpacity={(entry) => entry.name === selectedGenre ? 1 : 0.7}
-                  // Mudar a cor do gênero selecionado
-                  fill={(entry) => entry.name === selectedGenre ? '#8B5CF6' : '#3B82F6'}
+                  fill="#3B82F6"
                 />
               </BarChart>
             </ResponsiveContainer>
