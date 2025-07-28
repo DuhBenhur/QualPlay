@@ -2,20 +2,22 @@ import { createClient } from '@supabase/supabase-js'
 import { isValidEnvironment } from './utils'
 
 // Verificar variáveis de ambiente
-// Valores de fallback para desenvolvimento local
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://seu-projeto.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-if (!supabaseUrl || supabaseUrl === 'https://seu-projeto.supabase.co') {
-  console.error('⚠️ VITE_SUPABASE_URL não configurada corretamente!')
+// Verificar se as variáveis estão configuradas corretamente
+const isSupabaseConfigured = supabaseUrl && 
+  supabaseAnonKey && 
+  supabaseUrl !== 'https://seu-projeto.supabase.co' && 
+  supabaseAnonKey !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+
+if (!isSupabaseConfigured) {
+  console.error('⚠️ Supabase não configurado corretamente!')
+  console.error('Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no Netlify')
 }
 
-if (!supabaseAnonKey || supabaseAnonKey === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...') {
-  console.error('⚠️ VITE_SUPABASE_ANON_KEY não configurada corretamente!')
-}
-
-// Criar cliente com opções adicionais
-const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+// Criar cliente apenas se as variáveis estiverem configuradas
+const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
@@ -25,11 +27,13 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     flowType: 'pkce',
     debug: true
   }
-})
+}) : null
 
 // Verificar se há token de confirmação na URL
 // Isso é necessário para processar a confirmação de email
 const checkConfirmationToken = async () => {
+  if (!supabase) return;
+  
   try {
     // Verificar se estamos em um ambiente válido
     if (!isValidEnvironment()) {
@@ -67,7 +71,7 @@ const checkConfirmationToken = async () => {
 };
 
 // Executar verificação de token apenas se estivermos em um ambiente válido
-if (isValidEnvironment()) {
+if (isValidEnvironment() && supabase) {
   checkConfirmationToken();
 }
 
