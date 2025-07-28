@@ -29,33 +29,44 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Verificar se há token de confirmação na URL
 // Isso é necessário para processar a confirmação de email
 const checkConfirmationToken = async () => {
-  const url = new URL(window.location.href);
-  const token = url.searchParams.get('token');
-  const type = url.searchParams.get('type');
-  
-  if (token && type === 'signup') {
-    try {
-      console.log('Token de confirmação detectado, processando...');
-      const { error } = await supabase.auth.verifyOtp({
-        token_hash: token,
-        type: 'signup'
-      });
-      
-      if (error) {
-        console.error('Erro ao confirmar email:', error);
-      } else {
-        console.log('Email confirmado com sucesso!');
-        // Remover parâmetros da URL para evitar problemas de refresh
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-    } catch (error) {
-      console.error('Erro ao processar token de confirmação:', error);
+  try {
+    // Verificar se window.location.href é válida
+    if (!window.location.href || window.location.href === 'about:blank') {
+      console.log('URL inválida detectada, ignorando verificação de token');
+      return;
     }
+    
+    const url = new URL(window.location.href);
+    const token = url.searchParams.get('token');
+    const type = url.searchParams.get('type');
+    
+    if (token && type === 'signup') {
+      try {
+        console.log('Token de confirmação detectado, processando...');
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: token,
+          type: 'signup'
+        });
+        
+        if (error) {
+          console.error('Erro ao confirmar email:', error);
+        } else {
+          console.log('Email confirmado com sucesso!');
+          // Remover parâmetros da URL para evitar problemas de refresh
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      } catch (error) {
+        console.error('Erro ao processar token de confirmação:', error);
+      }
+    }
+  } catch (error) {
+    // Ignorar erro de URL inválida
+    console.log('URL inválida detectada, ignorando verificação de token');
   }
 };
 
-// Executar verificação de token
-if (typeof window !== 'undefined') {
+// Executar verificação de token apenas se estivermos em um ambiente válido
+if (typeof window !== 'undefined' && window.location.href && window.location.href !== 'about:blank') {
   checkConfirmationToken();
 }
 
