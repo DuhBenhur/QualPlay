@@ -19,7 +19,8 @@ import { searchMoviesAndDirectors, getMovieDetails } from './services/tmdbApi';
 
 // Import the missing components
 import UserMovieStats from './components/UserMovieStats'; 
-import UserMovieList from './components/UserMovieList'; 
+import UserMovieList from './components/UserMovieList';
+import SupabaseConnectionTest from './components/Auth/SupabaseConnectionTest'; 
 
 function App() {
   const { user } = useAuth();
@@ -359,6 +360,9 @@ function App() {
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
       />
+      
+      {/* Componente de teste para Supabase */}
+      <SupabaseConnectionTest />
       
 
     </div>
