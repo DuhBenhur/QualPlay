@@ -11,21 +11,31 @@ const isSupabaseConfigured = supabaseUrl &&
   supabaseUrl !== 'https://seu-projeto.supabase.co' && 
   supabaseAnonKey !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
 
+// Verificar se estamos no Netlify
+const isNetlify = typeof window !== 'undefined' && 
+  (window.location.hostname.includes('netlify.app') || 
+   window.location.hostname.includes('netlify.com'))
+
 if (!isSupabaseConfigured) {
   console.error('⚠️ Supabase não configurado corretamente!')
   console.error('Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no Netlify')
 }
 
-// Criar cliente apenas se as variáveis estiverem configuradas
-const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey, {
+if (isNetlify) {
+  console.log('🌐 Detectado ambiente Netlify - inicializando Supabase com cuidado')
+}
+
+// Criar cliente apenas se as variáveis estiverem configuradas E não estivermos no Netlify
+// Temporariamente desabilitar no Netlify para isolar o problema
+const supabase = (isSupabaseConfigured && !isNetlify) ? createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true, // Importante para processar tokens de confirmação
+    detectSessionInUrl: false, // Desabilitar detecção de URL no Netlify
     storageKey: 'qualplay-auth',
     storage: localStorage,
     flowType: 'pkce',
-    debug: true
+    debug: false // Desabilitar debug no Netlify
   }
 }) : null
 
@@ -74,10 +84,6 @@ const checkConfirmationToken = async () => {
 if (isValidEnvironment() && supabase) {
   checkConfirmationToken();
 }
-
-
-
-
 
 // Tipos para o banco de dados
 export interface Profile {
