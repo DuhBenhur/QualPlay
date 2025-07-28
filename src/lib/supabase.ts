@@ -25,9 +25,8 @@ if (isNetlify) {
   console.log('🌐 Detectado ambiente Netlify - inicializando Supabase com cuidado')
 }
 
-// Criar cliente apenas se as variáveis estiverem configuradas E não estivermos no Netlify
-// Temporariamente desabilitar no Netlify para isolar o problema
-const supabase = (isSupabaseConfigured && !isNetlify) ? createClient(supabaseUrl, supabaseAnonKey, {
+// Criar cliente apenas se as variáveis estiverem configuradas
+const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
