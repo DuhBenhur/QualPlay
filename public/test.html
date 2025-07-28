@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste QualPlay</title>
+</head>
+<body>
+    <h1>Teste QualPlay - Ambiente Netlify</h1>
+    <p>Se você está vendo esta página, o ambiente está funcionando.</p>
+    <p>URL atual: <span id="current-url"></span></p>
+    <p>User Agent: <span id="user-agent"></span></p>
+    
+    <script>
+        document.getElementById('current-url').textContent = window.location.href;
+        document.getElementById('user-agent').textContent = navigator.userAgent;
+        
+        // Teste de URL
+        try {
+            const testUrl = new URL(window.location.href);
+            console.log('✅ URL válida:', testUrl.href);
+        } catch (error) {
+            console.error('❌ Erro na URL:', error);
+        }
+    </script>
+</body>
+</html> 
