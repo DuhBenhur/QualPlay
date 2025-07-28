@@ -93,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
         options: {
           // URL para redirecionamento após confirmação de email
-          emailRedirectTo: `${window.location.origin}`,
+          emailRedirectTo: typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'https://qualplay.netlify.app',
           data: {
             full_name: fullName
           }

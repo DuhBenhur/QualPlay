@@ -122,7 +122,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'https://qualplay.netlify.app'
         }
       });
       if (error) {

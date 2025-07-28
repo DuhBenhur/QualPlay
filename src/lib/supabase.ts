@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { isValidEnvironment } from './utils'
 
 // Verificar variáveis de ambiente
 // Valores de fallback para desenvolvimento local
@@ -30,9 +31,9 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Isso é necessário para processar a confirmação de email
 const checkConfirmationToken = async () => {
   try {
-    // Verificar se window.location.href é válida
-    if (!window.location.href || window.location.href === 'about:blank') {
-      console.log('URL inválida detectada, ignorando verificação de token');
+    // Verificar se estamos em um ambiente válido
+    if (!isValidEnvironment()) {
+      console.log('Ambiente inválido detectado, ignorando verificação de token');
       return;
     }
     
@@ -66,7 +67,7 @@ const checkConfirmationToken = async () => {
 };
 
 // Executar verificação de token apenas se estivermos em um ambiente válido
-if (typeof window !== 'undefined' && window.location.href && window.location.href !== 'about:blank') {
+if (isValidEnvironment()) {
   checkConfirmationToken();
 }
 
