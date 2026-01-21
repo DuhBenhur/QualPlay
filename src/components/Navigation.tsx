@@ -1,28 +1,29 @@
 import React from 'react';
-import { Film, Info, MessageSquare, Home, HelpCircle, LogIn } from 'lucide-react';
+import { Film, Info, MessageSquare, Home, HelpCircle, LogIn, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import UserMenu from './Auth/UserMenu';
 // import LanguageSelector from './LanguageSelector';
 
 interface NavigationProps {
-  currentPage: 'home' | 'about' | 'contact';
-  onPageChange: (page: 'home' | 'about' | 'contact') => void;
+  currentPage: 'home' | 'about' | 'contact' | 'community';
+  onPageChange: (page: 'home' | 'about' | 'contact' | 'community') => void;
   onOpenTutorial?: () => void;
   onLogin?: () => void;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ 
-  currentPage, 
-  onPageChange, 
+const Navigation: React.FC<NavigationProps> = ({
+  currentPage,
+  onPageChange,
   onOpenTutorial,
   onLogin
 }) => {
   const { user } = useAuth();
-  
+
   const [showLoginModal, setShowLoginModal] = React.useState(false);
 
   const navItems = [
     { id: 'home' as const, label: 'Buscar Filmes', icon: Home },
+    { id: 'community' as const, label: 'Comunidade', icon: Users },
     { id: 'about' as const, label: 'Sobre', icon: Info },
     { id: 'contact' as const, label: 'Contato', icon: MessageSquare },
   ];
@@ -33,9 +34,9 @@ const Navigation: React.FC<NavigationProps> = ({
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <img 
-              src="/seu_logo.png" 
-              alt="Eduardo Ben-Hur Logo" 
+            <img
+              src="/seu_logo.png"
+              alt="Eduardo Ben-Hur Logo"
               className="w-10 h-10 rounded-full object-cover"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
@@ -55,20 +56,19 @@ const Navigation: React.FC<NavigationProps> = ({
                 <button
                   key={item.id}
                   onClick={() => onPageChange(item.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
-                    currentPage === item.id
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${currentPage === item.id
                       ? 'bg-blue-600 text-white'
                       : 'text-slate-300 hover:text-white hover:bg-slate-700'
-                  }`}
+                    }`}
                 >
                   <Icon size={18} />
                   <span className="hidden sm:inline">{item.label}</span>
                 </button>
               );
             })}
-            
+
             {/* <LanguageSelector /> */}
-            
+
             {onOpenTutorial && (
               <button
                 onClick={onOpenTutorial}
@@ -79,7 +79,7 @@ const Navigation: React.FC<NavigationProps> = ({
                 <span className="hidden sm:inline">Tutorial</span>
               </button>
             )}
-            
+
             {user ? (
               <UserMenu />
             ) : (

@@ -1,26 +1,54 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star, Calendar, User, Play, Tv, Heart } from 'lucide-react';
 import { MovieDetails } from '../types/movie';
 import { getImageUrl } from '../services/tmdbApi';
+import { useAuth } from '../contexts/AuthContext';
+import { StarRating } from './Ratings';
+import { rateMovie, getUserRating } from '../services/interactionService';
+import type { SearchLoggingContext } from '../contexts/SearchContext';
 
 interface MovieCardProps {
   movie: MovieDetails;
   onClick: () => void;
   onFavoriteToggle?: (movie: MovieDetails) => void;
+  resultPosition?: number;
+  searchContext?: SearchLoggingContext;
 }
 
-const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, onFavoriteToggle }) => {
-  const [isFavorite, setIsFavorite] = React.useState(false);
+const MovieCard: React.FC<MovieCardProps> = ({
+  movie,
+  onClick,
+  onFavoriteToggle,
+  resultPosition,
+  searchContext
+}) => {
+  const { user } = useAuth();
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [userRating, setUserRating] = useState<number>(0);
+  const [isRatingLoading, setIsRatingLoading] = useState(false);
+  const [ratingSuccess, setRatingSuccess] = useState(false);
 
   // Verificar se o filme está nos favoritos
-  React.useEffect(() => {
+  useEffect(() => {
     const savedMovies = JSON.parse(localStorage.getItem('savedMovies') || '[]');
     const isMovieSaved = savedMovies.some((saved: any) => saved.id === movie.id);
     setIsFavorite(isMovieSaved);
   }, [movie.id]);
 
+  // Carregar rating do usuário
+  useEffect(() => {
+    const loadUserRating = async () => {
+      if (!user || !movie?.id) return;
+      const { data } = await getUserRating(user.id, movie.id);
+      if (data) {
+        setUserRating(data.score);
+      }
+    };
+    loadUserRating();
+  }, [user, movie?.id]);
+
   // Escutar mudanças nos favoritos
-  React.useEffect(() => {
+  useEffect(() => {
     const handleSavedMoviesChange = () => {
       const savedMovies = JSON.parse(localStorage.getItem('savedMovies') || '[]');
       const isMovieSaved = savedMovies.some((saved: any) => saved.id === movie.id);
@@ -31,12 +59,31 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, onFavoriteToggle 
     return () => window.removeEventListener('savedMoviesChanged', handleSavedMoviesChange);
   }, [movie.id]);
 
+  const handleRatingChange = async (score: 1 | 2 | 3 | 4 | 5) => {
+    if (!user) return;
+
+    setIsRatingLoading(true);
+    const { error } = await rateMovie(user.id, movie.id, score, {
+      page: searchContext?.page || 'search_results',
+      rating_source: 'card',
+      search_query: searchContext?.search_query,
+      result_position: resultPosition
+    });
+
+    if (!error) {
+      setUserRating(score);
+      setRatingSuccess(true);
+      setTimeout(() => setRatingSuccess(false), 2000);
+    }
+    setIsRatingLoading(false);
+  };
+
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Evita abrir o modal
-    
+
     try {
       const savedMovies = JSON.parse(localStorage.getItem('savedMovies') || '[]');
-      
+
       if (isFavorite) {
         // Remover dos favoritos
         const updatedMovies = savedMovies.filter((saved: any) => saved.id !== movie.id);
@@ -56,15 +103,15 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, onFavoriteToggle 
           genres: movie.genres && Array.isArray(movie.genres) ? movie.genres.map(g => g.name).join(', ') : 'Não informado',
           overview: movie.overview || ''
         };
-        
+
         savedMovies.push(movieToSave);
         localStorage.setItem('savedMovies', JSON.stringify(savedMovies));
         setIsFavorite(true);
       }
-      
+
       // Disparar evento para atualizar outros componentes
       window.dispatchEvent(new CustomEvent('savedMoviesChanged'));
-      
+
       // Callback opcional
       if (onFavoriteToggle) {
         onFavoriteToggle(movie);
@@ -99,7 +146,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, onFavoriteToggle 
     if (service.includes('(Compra)')) {
       return 'bg-red-600'; // Vermelho = compra
     }
-    
+
     // Fallback para cores por serviço (caso não tenha tipo)
     const lowerService = service.toLowerCase();
     if (lowerService.includes('netflix')) return 'bg-red-600';
@@ -128,7 +175,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, onFavoriteToggle 
   const getStreamingUrl = (service: string, movieTitle: string) => {
     const lowerService = service.toLowerCase();
     const searchQuery = encodeURIComponent(movieTitle);
-    
+
     // URLs diretas para os serviços de streaming
     if (lowerService.includes('netflix')) {
       return `https://www.netflix.com/search?q=${searchQuery}`;
@@ -154,7 +201,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, onFavoriteToggle 
     if (lowerService.includes('telecine')) {
       return `https://telecineplay.com.br/busca?q=${searchQuery}`;
     }
-    
+
     // Fallback: busca no Google
     return `https://www.google.com/search?q=${searchQuery}+${encodeURIComponent(service)}+assistir+online`;
   };
@@ -201,23 +248,22 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, onFavoriteToggle 
             {safeMovie.vote_average.toFixed(1)}
           </span>
         </div>
-        
+
         {/* Botão de Favorito */}
         <button
           onClick={handleFavoriteClick}
           className="absolute top-3 left-3 bg-black bg-opacity-75 rounded-full p-2 hover:bg-opacity-90 transition-all duration-200 group"
           title={isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
         >
-          <Heart 
-            size={16} 
-            className={`transition-all duration-200 ${
-              isFavorite 
-                ? 'text-red-500 fill-red-500 scale-110' 
-                : 'text-white hover:text-red-400 group-hover:scale-110'
-            }`}
+          <Heart
+            size={16}
+            className={`transition-all duration-200 ${isFavorite
+              ? 'text-red-500 fill-red-500 scale-110'
+              : 'text-white hover:text-red-400 group-hover:scale-110'
+              }`}
           />
         </button>
-        
+
         {/* Streaming Services Badge */}
         <div className="absolute top-16 left-3">
           {safeMovie.streaming_services && safeMovie.streaming_services !== 'Não disponível' && safeMovie.streaming_services !== 'N/A' ? (
@@ -242,12 +288,12 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, onFavoriteToggle 
           )}
         </div>
       </div>
-      
+
       <div className="p-4">
         <h3 className="text-white font-bold text-lg mb-2 line-clamp-2">
           {safeMovie.title}
         </h3>
-        
+
         {/* Streaming Info Destacada */}
         <div className="mb-3 p-2 bg-slate-700 rounded-md">
           <div className="flex items-center gap-2 text-sm">
@@ -271,30 +317,60 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, onFavoriteToggle 
             <p className="text-slate-400 text-sm mt-1">Não disponível</p>
           )}
         </div>
-        
+
         <div className="space-y-2 text-sm text-slate-300">
           <div className="flex items-center gap-2">
             <Calendar size={14} />
             <span>{formatDate(safeMovie.release_date)}</span>
           </div>
-          
+
           {safeMovie.director && safeMovie.director !== 'N/A' && (
             <div className="flex items-center gap-2">
               <User size={14} />
               <span>{safeMovie.director}</span>
             </div>
           )}
-          
+
           <div className="text-slate-400">
             {formatGenres(safeMovie.genres)}
           </div>
         </div>
-        
+
         {safeMovie.overview && (
           <p className="text-slate-400 text-sm mt-3 line-clamp-3">
             {safeMovie.overview}
           </p>
         )}
+
+        {/* User Rating Section */}
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="mt-4 pt-3 border-t border-slate-700"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-slate-400 text-xs">
+              {user ? 'Sua avaliação:' : 'Avalie:'}
+            </span>
+            {ratingSuccess && (
+              <span className="text-xs text-green-400 animate-pulse">
+                Salvo!
+              </span>
+            )}
+          </div>
+          <div className="mt-1">
+            <StarRating
+              value={userRating}
+              onChange={handleRatingChange}
+              size="sm"
+              readonly={!user || isRatingLoading}
+            />
+          </div>
+          {!user && (
+            <p className="text-slate-500 text-xs mt-1">
+              Faça login para avaliar
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

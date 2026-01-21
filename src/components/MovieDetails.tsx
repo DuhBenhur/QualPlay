@@ -1,8 +1,10 @@
-import React from 'react';
-import { X, Star, Calendar, Clock, Users, Play, Download, ExternalLink, Check, Eye, EyeOff, Clock3 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Star, Calendar, Clock, Users, Play, Download, ExternalLink, MessageCircle } from 'lucide-react';
 import { MovieDetails as MovieDetailsType } from '../types/movie';
 import { getImageUrl } from '../services/tmdbApi';
 import { useAuth } from '../contexts/AuthContext';
+import { StarRating, QuickReview } from './Ratings';
+import { rateMovie, getUserRating, addQuickReview, logMovieView } from '../services/interactionService';
 
 interface MovieDetailsProps {
   movie: MovieDetailsType;
@@ -10,6 +12,62 @@ interface MovieDetailsProps {
 }
 
 const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
+  const { user } = useAuth();
+  const [userRating, setUserRating] = useState<number>(0);
+  const [isRatingLoading, setIsRatingLoading] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [ratingSaved, setRatingSaved] = useState(false);
+
+  // Carregar rating do usuário ao abrir
+  useEffect(() => {
+    if (user && movie?.id) {
+      loadUserRating();
+      // Log de visualização para ML
+      logMovieView(user.id, movie.id, { page: 'details' });
+    }
+  }, [user, movie?.id]);
+
+  const loadUserRating = async () => {
+    if (!user) return;
+    const { data } = await getUserRating(user.id, movie.id);
+    if (data) {
+      setUserRating(data.score);
+    }
+  };
+
+  const handleRatingChange = async (score: 1 | 2 | 3 | 4 | 5) => {
+    if (!user) {
+      alert('Faça login para avaliar filmes');
+      return;
+    }
+
+    setIsRatingLoading(true);
+    const { error } = await rateMovie(user.id, movie.id, score, {
+      page: 'details',
+      rating_source: 'details'
+    });
+
+    if (!error) {
+      setUserRating(score);
+      setRatingSaved(true);
+      setTimeout(() => setRatingSaved(false), 2000);
+    }
+    setIsRatingLoading(false);
+  };
+
+  const handleQuickReviewSubmit = async (content: string) => {
+    if (!user) {
+      throw new Error('Faça login para enviar reviews');
+    }
+
+    const { error } = await addQuickReview(user.id, movie.id, content, {
+      page: 'details'
+    });
+
+    if (error) {
+      throw error;
+    }
+  };
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'Data não informada';
@@ -43,7 +101,7 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
   const getStreamingUrl = (service: string, movieTitle: string) => {
     const lowerService = service.toLowerCase();
     const searchQuery = encodeURIComponent(movieTitle);
-    
+
     if (lowerService.includes('netflix')) {
       return `https://www.netflix.com/search?q=${searchQuery}`;
     }
@@ -68,7 +126,7 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
     if (lowerService.includes('telecine')) {
       return `https://telecineplay.com.br/busca?q=${searchQuery}`;
     }
-    
+
     return `https://www.google.com/search?q=${searchQuery}+${encodeURIComponent(service)}+assistir+online`;
   };
 
@@ -87,7 +145,7 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
     try {
       const savedMovies = JSON.parse(localStorage.getItem('savedMovies') || '[]');
       const isAlreadySaved = savedMovies.some((saved: any) => saved.id === movie.id);
-      
+
       if (!isAlreadySaved) {
         savedMovies.push({
           id: movie.id,
@@ -99,13 +157,14 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
           streaming_services: movie.streaming_services && movie.streaming_services !== 'N/A' ? movie.streaming_services : 'Não disponível',
           director: movie.director && movie.director !== 'N/A' ? movie.director : 'Não informado',
           genres: movie.genres && Array.isArray(movie.genres) ? movie.genres.map(g => g.name).join(', ') : 'Não informado',
-          overview: movie.overview || ''
+          overview: movie.overview || '',
+          userRating: userRating > 0 ? userRating : undefined
         });
         localStorage.setItem('savedMovies', JSON.stringify(savedMovies));
-        
+
         // Disparar evento customizado para atualizar outros componentes
         window.dispatchEvent(new CustomEvent('savedMoviesChanged'));
-        
+
         alert('Filme salvo na sua lista!');
       } else {
         alert('Este filme já está na sua lista!');
@@ -145,7 +204,7 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
           >
             <X size={24} />
           </button>
-          
+
           <div className="relative">
             <img
               src={getImageUrl(safeMovie.backdrop_path || safeMovie.poster_path, 'w1280')}
@@ -158,7 +217,7 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
             <div className="absolute inset-0 bg-gradient-to-t from-slate-800 to-transparent" />
           </div>
         </div>
-        
+
         <div className="p-6 -mt-20 relative z-10">
           <div className="flex flex-col md:flex-row gap-6">
             <div className="flex-shrink-0">
@@ -171,10 +230,10 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
                 }}
               />
             </div>
-            
+
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-white mb-2">{safeMovie.title}</h1>
-              
+
               <div className="flex items-center gap-4 mb-4">
                 <div className="flex items-center gap-1">
                   <Star className="text-yellow-400 fill-current" size={20} />
@@ -185,12 +244,12 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
                     ({safeMovie.vote_count.toLocaleString()} votos)
                   </span>
                 </div>
-                
+
                 <div className="flex items-center gap-1 text-slate-300">
                   <Calendar size={16} />
                   <span>{formatDate(safeMovie.release_date)}</span>
                 </div>
-                
+
                 {safeMovie.runtime > 0 && (
                   <div className="flex items-center gap-1 text-slate-300">
                     <Clock size={16} />
@@ -198,7 +257,54 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
                   </div>
                 )}
               </div>
-              
+
+              {/* User Rating Section */}
+              <div className="mb-4 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-white font-medium mb-2 flex items-center gap-2">
+                      {user ? 'Sua Avaliação' : 'Avalie este filme'}
+                      {ratingSaved && (
+                        <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded-full animate-pulse">
+                          Salvo!
+                        </span>
+                      )}
+                    </h4>
+                    <StarRating
+                      value={userRating}
+                      onChange={handleRatingChange}
+                      size="lg"
+                      showLabel
+                      readonly={!user || isRatingLoading}
+                    />
+                  </div>
+                  {user && (
+                    <button
+                      onClick={() => setShowReviewForm(!showReviewForm)}
+                      className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
+                    >
+                      <MessageCircle size={20} />
+                      <span className="text-sm">Review</span>
+                    </button>
+                  )}
+                </div>
+
+                {showReviewForm && user && (
+                  <div className="mt-4 pt-4 border-t border-slate-600">
+                    <QuickReview
+                      onSubmit={handleQuickReviewSubmit}
+                      placeholder="O que você achou desse filme?"
+                    />
+                  </div>
+                )}
+
+                {!user && (
+                  <p className="text-slate-400 text-sm mt-2">
+                    Faça login para avaliar e escrever reviews
+                  </p>
+                )}
+              </div>
+
               <div className="mb-4">
                 <div className="flex flex-wrap gap-2">
                   <span className="inline-block bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
@@ -212,12 +318,12 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
                   )}
                 </div>
               </div>
-              
+
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-white mb-2">Sinopse</h3>
                 <p className="text-slate-300 leading-relaxed">{safeMovie.overview}</p>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 {safeMovie.director && safeMovie.director !== 'N/A' && safeMovie.director !== 'Não informado' && (
                   <div>
@@ -225,14 +331,14 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
                     <p className="text-slate-300">{safeMovie.director}</p>
                   </div>
                 )}
-                
+
                 {safeMovie.cast && safeMovie.cast !== 'N/A' && safeMovie.cast !== 'Não informado' && (
                   <div>
                     <h4 className="font-semibold text-white mb-1">Elenco Principal</h4>
                     <p className="text-slate-300">{safeMovie.cast}</p>
                   </div>
                 )}
-                
+
                 {safeMovie.streaming_services && (
                   <div className="md:col-span-2">
                     <div className="bg-slate-700 rounded-lg p-4">
@@ -247,11 +353,11 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
                             const isIncluded = trimmedService.includes('(Incluído)');
                             const isRental = trimmedService.includes('(Aluguel)');
                             const isPurchase = trimmedService.includes('(Compra)');
-                            
+
                             let bgColor = 'bg-green-600 hover:bg-green-700 border-green-500/30 hover:border-green-400';
                             let icon = '✅';
                             let typeText = 'Incluído na assinatura';
-                            
+
                             if (isRental) {
                               bgColor = 'bg-yellow-600 hover:bg-yellow-700 border-yellow-500/30 hover:border-yellow-400';
                               icon = '💰';
@@ -261,9 +367,9 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
                               icon = '🛒';
                               typeText = 'Disponível para compra';
                             }
-                            
+
                             const serviceName = trimmedService.replace(/\s*\([^)]*\)/, '');
-                            
+
                             return (
                               <button
                                 key={index}
@@ -291,7 +397,7 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
                   </div>
                 )}
               </div>
-              
+
               {(safeMovie.budget > 0 || safeMovie.revenue > 0) && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   {safeMovie.budget > 0 && (
@@ -300,7 +406,7 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
                       <p className="text-slate-300">{formatCurrency(safeMovie.budget)}</p>
                     </div>
                   )}
-                  
+
                   {safeMovie.revenue > 0 && (
                     <div>
                       <h4 className="font-semibold text-white mb-1">Bilheteria</h4>
@@ -309,24 +415,24 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
                   )}
                 </div>
               )}
-              
+
               <div className="flex gap-3">
                 <div className="flex gap-2">
-                  <button 
+                  <button
                     onClick={handleWatchTrailer}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                   >
                     <Play size={16} />
                     Assistir Trailer
                   </button>
-                  <button 
+                  <button
                     onClick={handleSaveMovie}
                     className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                   >
                     <Download size={16} />
                     Salvar
                   </button>
-                  <button 
+                  <button
                     onClick={() => window.open(`https://www.themoviedb.org/movie/${safeMovie.id}`, '_blank')}
                     className="flex items-center gap-2 px-4 py-2 bg-slate-600 text-white rounded-md hover:bg-slate-700 transition-colors"
                   >

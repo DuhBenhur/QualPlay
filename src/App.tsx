@@ -18,12 +18,13 @@ import { MovieDetails as MovieDetailsType, SearchFilters } from './types/movie';
 import { searchMoviesAndDirectors, getMovieDetails } from './services/tmdbApi';
 
 // Import the missing components
-import UserMovieStats from './components/UserMovieStats'; 
-import UserMovieList from './components/UserMovieList'; 
+import UserMovieStats from './components/UserMovieStats';
+import UserMovieList from './components/UserMovieList';
+import CommunityPage from './components/CommunityPage';
 
 function App() {
   const { user } = useAuth();
-  const [currentPage, setCurrentPage] = useState<'home' | 'about' | 'contact'>('home');
+  const [currentPage, setCurrentPage] = useState<'home' | 'about' | 'contact' | 'community'>('home');
   const [movies, setMovies] = useState<MovieDetailsType[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<MovieDetailsType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -84,7 +85,7 @@ function App() {
   ) => {
     setIsLoading(true);
     setHasSearched(true);
-    
+
     try {
       const results = await searchMoviesAndDirectors(movieNames, directorNames, filters);
       setMovies(results.movies);
@@ -105,7 +106,7 @@ function App() {
   const handleMovieClick = (movie: MovieDetailsType) => {
     setSelectedMovie(movie);
   };
-  
+
   const handleSavedMovieClick = async (movieId: number) => {
     try {
       const movieDetails = await getMovieDetails(movieId);
@@ -128,25 +129,25 @@ function App() {
       sortBy: 'popularity.desc',
       region: 'BR'
     };
-    
+
     handleSearch(movieNames, directorNames, defaultFilters);
   };
 
   if (currentPage === 'about') {
     return (
       <>
-        <Navigation 
-          currentPage={currentPage} 
+        <Navigation
+          currentPage={currentPage}
           onPageChange={setCurrentPage}
           onOpenTutorial={() => setShowTutorial(true)}
           onLogin={() => setShowLoginModal(true)}
         />
         <AboutPage />
-        <Tutorial 
-          isOpen={showTutorial} 
-          onClose={handleCloseTutorial} 
+        <Tutorial
+          isOpen={showTutorial}
+          onClose={handleCloseTutorial}
         />
-        <LoginModal 
+        <LoginModal
           isOpen={showLoginModal}
           onClose={() => setShowLoginModal(false)}
         />
@@ -157,18 +158,49 @@ function App() {
   if (currentPage === 'contact') {
     return (
       <>
-        <Navigation 
-          currentPage={currentPage} 
+        <Navigation
+          currentPage={currentPage}
           onPageChange={setCurrentPage}
           onOpenTutorial={() => setShowTutorial(true)}
           onLogin={() => setShowLoginModal(true)}
         />
         <ContactPage />
-        <Tutorial 
-          isOpen={showTutorial} 
-          onClose={handleCloseTutorial} 
+        <Tutorial
+          isOpen={showTutorial}
+          onClose={handleCloseTutorial}
         />
-        <LoginModal 
+        <LoginModal
+          isOpen={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
+        />
+      </>
+    );
+  }
+
+  if (currentPage === 'community') {
+    return (
+      <>
+        <Navigation
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          onOpenTutorial={() => setShowTutorial(true)}
+          onLogin={() => setShowLoginModal(true)}
+        />
+        <CommunityPage
+          onMovieClick={handleSavedMovieClick}
+          onLogin={() => setShowLoginModal(true)}
+        />
+        {selectedMovie && (
+          <MovieDetails
+            movie={selectedMovie}
+            onClose={handleCloseDetails}
+          />
+        )}
+        <Tutorial
+          isOpen={showTutorial}
+          onClose={handleCloseTutorial}
+        />
+        <LoginModal
           isOpen={showLoginModal}
           onClose={() => setShowLoginModal(false)}
         />
@@ -178,13 +210,13 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-900">
-      <Navigation 
-        currentPage={currentPage} 
+      <Navigation
+        currentPage={currentPage}
         onPageChange={setCurrentPage}
         onOpenTutorial={() => setShowTutorial(true)}
         onLogin={() => setShowLoginModal(true)}
       />
-      
+
       <div className="flex flex-col md:flex-row">
         {/* Sidebar - Full width no mobile, fixed width no desktop */}
         <div className="w-full md:w-80 bg-slate-800 border-b md:border-r md:border-b-0 border-slate-700 overflow-y-auto h-auto md:h-screen">
@@ -195,28 +227,28 @@ function App() {
             isLoading={isLoading}
           />
         </div>
-        
+
         <main className="flex-1 p-3 md:p-6">
           <div className="max-w-7xl mx-auto">
             {/* Estatísticas do usuário (se logado) */}
             {user && <UserMovieStats />}
-            
+
             {/* Lista de filmes do usuário (se logado) */}
             {user && <UserMovieList onMovieClick={handleSavedMovieClick} />}
-            
+
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <Film className="text-blue-400" size={32} /> 
-                  <h1 className="text-2xl font-bold text-white"> 
+                  <Film className="text-blue-400" size={32} />
+                  <h1 className="text-2xl font-bold text-white">
                     Resultados da Busca
                   </h1>
                 </div>
-                
+
                 {movies.length > 0 && (
                   <div className="flex items-center gap-4">
                     <PDFExport movies={movies} />
-                    
+
                     <button
                       onClick={() => setShowTutorial(true)}
                       className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm"
@@ -225,25 +257,23 @@ function App() {
                       <HelpCircle size={16} />
                       <span className="hidden md:inline">Tutorial</span>
                     </button>
-                    
+
                     <div className="hidden md:flex items-center gap-2">
                       <button
                         onClick={() => setViewMode('grid')}
-                        className={`p-2 rounded-md transition-colors ${
-                          viewMode === 'grid'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                        }`}
+                        className={`p-2 rounded-md transition-colors ${viewMode === 'grid'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                          }`}
                       >
                         <Grid size={20} />
                       </button>
                       <button
                         onClick={() => setViewMode('table')}
-                        className={`p-2 rounded-md transition-colors ${
-                          viewMode === 'table'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                        }`}
+                        className={`p-2 rounded-md transition-colors ${viewMode === 'table'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                          }`}
                       >
                         <List size={20} />
                       </button>
@@ -251,28 +281,28 @@ function App() {
                   </div>
                 )}
               </div>
-              
+
               {movies.length > 0 && (
                 <p className="text-slate-400">
                   Encontrados {movies.length} filmes
                 </p>
               )}
             </div>
-            
+
             {isLoading && (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
                 <span className="ml-3 text-white">Buscando filmes...</span>
               </div>
             )}
-            
+
             {!isLoading && movies.length > 0 && (
               <>
                 {/* Mostrar estatísticas do usuário se estiver logado */}
                 {/* Componente UserMovieStats será implementado depois */}
-                
+
                 <DataVisualizationDashboard movies={movies} />
-                
+
                 {viewMode === 'grid' ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-8">
                     {movies.map((movie) => (
@@ -296,13 +326,13 @@ function App() {
                   </div>
                 )}
 
-                <RecommendationEngine 
+                <RecommendationEngine
                   watchedMovies={movies}
                   onMovieClick={handleMovieClick}
                 />
               </>
             )}
-            
+
             {!isLoading && hasSearched && movies.length === 0 && (
               <div className="text-center py-12">
                 <Film className="mx-auto text-slate-600 mb-4" size={64} />
@@ -314,12 +344,12 @@ function App() {
                 </p>
               </div>
             )}
-            
+
             {!isLoading && !hasSearched && (
               <div className="text-center py-12">
                 {/* Mostrar lista de filmes do usuário se estiver logado */}
                 {/* Componente UserMovieList será implementado depois */}
-                
+
                 <Film className="mx-auto text-slate-600 mb-4" size={64} />
                 <h2 className="text-lg md:text-xl font-semibold text-white mb-2">
                   Bem-vindo ao QualPlay
@@ -328,7 +358,7 @@ function App() {
                   Use a barra lateral para pesquisar filmes por título, diretor ou descobrir novos filmes com filtros avançados
                 </p>
                 <div className="max-w-2xl mx-auto px-4">
-                  <RecommendationEngine 
+                  <RecommendationEngine
                     watchedMovies={[]}
                     onMovieClick={handleMovieClick}
                   />
@@ -338,9 +368,9 @@ function App() {
           </div>
         </main>
       </div>
-      
-      <SavedMovies 
-        onMovieClick={handleSavedMovieClick} 
+
+      <SavedMovies
+        onMovieClick={handleSavedMovieClick}
         savedCount={savedMoviesCount}
       />
       {selectedMovie && (
@@ -349,17 +379,17 @@ function App() {
           onClose={handleCloseDetails}
         />
       )}
-      
-      <Tutorial 
-        isOpen={showTutorial} 
-        onClose={handleCloseTutorial} 
+
+      <Tutorial
+        isOpen={showTutorial}
+        onClose={handleCloseTutorial}
       />
-      
-      <LoginModal 
+
+      <LoginModal
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
       />
-      
+
 
     </div>
   );
