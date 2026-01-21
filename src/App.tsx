@@ -18,7 +18,6 @@ import { MovieDetails as MovieDetailsType, SearchFilters } from './types/movie';
 import { searchMoviesAndDirectors, getMovieDetails } from './services/tmdbApi';
 
 // Import the missing components
-import UserMovieStats from './components/UserMovieStats';
 import UserMovieList from './components/UserMovieList';
 import CommunityPage from './components/CommunityPage';
 
@@ -230,9 +229,6 @@ function App() {
 
         <main className="flex-1 p-3 md:p-6">
           <div className="max-w-7xl mx-auto">
-            {/* Estatísticas do usuário (se logado) */}
-            {user && <UserMovieStats />}
-
             {/* Lista de filmes do usuário (se logado) */}
             {user && <UserMovieList onMovieClick={handleSavedMovieClick} />}
 

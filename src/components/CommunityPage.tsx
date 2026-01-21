@@ -14,6 +14,7 @@ import CommunityFeed from './Community/CommunityFeed'
 import { supabase } from '../lib/supabase'
 import { getImageUrl, getMovieDetails } from '../services/tmdbApi'
 import { UserLevel, UserBadges, UserStreak, Leaderboard } from './Gamification'
+import UserMovieStats from './UserMovieStats'
 import {
     getUserGamification,
     initializeUserGamification,
@@ -334,6 +335,13 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onMovieClick, onLogin }) 
                     </div>
                 </div>
             </div>
+
+            {/* User Statistics - Only for logged in users */}
+            {user && (
+                <div className="max-w-7xl mx-auto px-6 mt-8">
+                    <UserMovieStats />
+                </div>
+            )}
 
             <div className="max-w-7xl mx-auto px-6 mt-12">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
