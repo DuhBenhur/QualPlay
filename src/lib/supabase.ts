@@ -1,20 +1,23 @@
 import { createClient } from '@supabase/supabase-js'
 import { isValidEnvironment } from './utils'
 
+// Re-exportar todos os tipos do schema social
+export * from '../types/supabase'
+
 // Verificar variáveis de ambiente
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 // Verificar se as variáveis estão configuradas corretamente
-const isSupabaseConfigured = supabaseUrl && 
-  supabaseAnonKey && 
-  supabaseUrl !== 'https://seu-projeto.supabase.co' && 
+const isSupabaseConfigured = supabaseUrl &&
+  supabaseAnonKey &&
+  supabaseUrl !== 'https://seu-projeto.supabase.co' &&
   supabaseAnonKey !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
 
 // Verificar se estamos no Netlify
-const isNetlify = typeof window !== 'undefined' && 
-  (window.location.hostname.includes('netlify.app') || 
-   window.location.hostname.includes('netlify.com'))
+const isNetlify = typeof window !== 'undefined' &&
+  (window.location.hostname.includes('netlify.app') ||
+    window.location.hostname.includes('netlify.com'))
 
 // Proteção adicional para URLs inválidas no Netlify
 const safeCreateClient = (url: string, key: string, options?: any) => {
@@ -24,7 +27,7 @@ const safeCreateClient = (url: string, key: string, options?: any) => {
       console.warn('URL do Supabase inválida detectada, usando fallback');
       url = 'https://vbogtbtfnwjyemloxgky.supabase.co';
     }
-    
+
     return createClient(url, key, options);
   } catch (error) {
     console.error('Erro ao criar cliente Supabase:', error);
@@ -64,7 +67,7 @@ const supabase = isSupabaseConfigured ? safeCreateClient(supabaseUrl, supabaseAn
 }) : {
   auth: {
     getSession: async () => ({ data: { session: null } }),
-    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => { } } } }),
     signUp: async () => ({ data: null, error: { message: 'Autenticação não disponível' } }),
     signIn: async () => ({ data: null, error: { message: 'Autenticação não disponível' } }),
     signOut: async () => ({ error: null }),
@@ -89,18 +92,18 @@ const supabase = isSupabaseConfigured ? safeCreateClient(supabaseUrl, supabaseAn
 // Isso é necessário para processar a confirmação de email
 const checkConfirmationToken = async () => {
   if (!supabase) return;
-  
+
   try {
     // Verificar se estamos em um ambiente válido
     if (!isValidEnvironment()) {
       console.log('Ambiente inválido detectado, ignorando verificação de token');
       return;
     }
-    
+
     const url = new URL(window.location.href);
     const token = url.searchParams.get('token');
     const type = url.searchParams.get('type');
-    
+
     if (token && type === 'signup') {
       try {
         console.log('Token de confirmação detectado, processando...');
@@ -108,7 +111,7 @@ const checkConfirmationToken = async () => {
           token_hash: token,
           type: 'signup'
         });
-        
+
         if (error) {
           console.error('Erro ao confirmar email:', error);
         } else {
@@ -131,24 +134,12 @@ if (isValidEnvironment() && supabase) {
   checkConfirmationToken();
 }
 
-// Tipos para o banco de dados
-export interface Profile {
-  id: string
-  email: string
-  full_name: string | null
-  avatar_url: string | null
-  created_at: string
-  updated_at: string
-  preferences: {
-    favorite_genres: number[]
-    preferred_languages: string[]
-    notification_settings: {
-      email_recommendations: boolean
-      new_releases: boolean
-    }
-  }
-}
+// ============================================================================
+// TIPOS LEGADOS (mantidos para compatibilidade)
+// Para novos desenvolvimentos, use os tipos de '../types/supabase'
+// ============================================================================
 
+/** @deprecated Use Profile de '../types/supabase' */
 export interface UserMovie {
   id: string
   user_id: string
@@ -169,6 +160,7 @@ export interface UserMovie {
   }
 }
 
+/** @deprecated Use CustomList de '../types/supabase' */
 export interface UserList {
   id: string
   user_id: string
@@ -180,12 +172,13 @@ export interface UserList {
   movies: UserMovie[]
 }
 
+/** @deprecated Use UserActivity de '../types/supabase' */
 export interface UserInteraction {
   id: string
   user_id: string
   movie_id: number
   interaction_type: 'search' | 'view_details' | 'add_to_list' | 'rate' | 'share'
-  metadata: Record<string, any>
+  metadata: Record<string, unknown>
   created_at: string
 }
 

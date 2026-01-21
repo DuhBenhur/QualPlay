@@ -11,6 +11,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<void>
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>
+  updateGenrePreferences: (genreIds: number[]) => Promise<{ error: Error | null }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -48,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       async (event, session) => {
         setSession(session)
         setUser(session?.user ?? null)
-        
+
         if (session?.user) {
           await loadProfile(session.user.id)
         } else {
@@ -94,14 +95,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Iniciando cadastro para:', email)
       console.log('Confirmação de email está desabilitada para desenvolvimento')
-      
+
       // Limpar qualquer sessão anterior
       try {
         await supabase.auth.signOut()
       } catch (e) {
         console.log('Erro ao fazer signOut prévio:', e)
       }
-      
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -113,18 +114,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       })
-      
+
       if (error) {
         console.error('Erro no signUp:', error)
         return { error }
       }
-      
+
       console.log('Cadastro bem-sucedido:', data.user?.id)
-      
+
       // Verificar se o email precisa de confirmação
       if (data.user && !data.user.confirmed_at) {
         console.log('Email precisa de confirmação. Verificando status...')
-        
+
         // Em desenvolvimento, o email já deve estar confirmado automaticamente
         // devido à configuração no Supabase
         const { data: userData } = await supabase.auth.getUser()
@@ -138,7 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Verificar se o perfil foi criado
       if (data.user) {
         console.log('Verificando perfil para usuário:', data.user.id)
-        
+
         // Esperar um momento maior para o trigger executar
         await new Promise(resolve => setTimeout(resolve, 3000))
 
@@ -174,7 +175,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               onConflict: 'id',
               ignoreDuplicates: false
             })
-          
+
           if (insertError) {
             console.error('Erro ao inserir perfil manualmente:', insertError)
           }
@@ -192,7 +193,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     console.log('Tentando login para:', email)
-    
+
     try {
       try {
         // Limpar qualquer sessão anterior
@@ -200,29 +201,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         console.log('Erro ao fazer signOut prévio:', error)
       }
-      
+
       // Tentar login
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       })
-      
+
       if (error) {
         console.error('Erro no login:', error.message)
-        
+
         // Verificar se o erro é de email não confirmado
         if (error.message.includes('Email not confirmed')) {
           console.log('Email não confirmado. Verifique sua caixa de entrada para confirmar o email.')
         }
-        
+
         return { error }
       } else {
         console.log('Login bem-sucedido:', data.user?.id)
-        
+
         // Carregar perfil
         if (data.user) {
           await loadProfile(data.user.id)
-          
+
           // Se não encontrou perfil, tentar criar manualmente
           if (!profile) {
             console.log('Perfil não encontrado, tentando criar manualmente')
@@ -235,7 +236,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   email: data.user.email,
                   full_name: data.user.email?.split('@')[0]
                 })
-              
+
               if (insertError) {
                 console.error('Erro ao inserir perfil manualmente:', insertError)
               } else {
@@ -247,7 +248,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           }
         }
-        
+
         return { error: null }
       }
     } catch (err) {
@@ -259,15 +260,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
-      
+
       if (error) {
         throw error;
       }
-      
+
       setUser(null);
       setProfile(null);
       setSession(null);
-      
+
     } catch (error) {
       setUser(null);
       setProfile(null);
@@ -275,7 +276,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw error;
     }
   }
-  
+
   // Função para verificar se o email está confirmado
   const checkEmailConfirmation = async (email: string) => {
     try {
@@ -284,12 +285,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .select('confirmed_at')
         .eq('email', email)
         .single()
-      
+
       if (error) {
         console.error('Erro ao verificar confirmação de email:', error)
         return false
       }
-      
+
       return data?.confirmed_at != null
     } catch (error) {
       console.error('Erro ao verificar confirmação de email:', error)
@@ -300,7 +301,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateProfile = async (updates: Partial<Profile>) => {
     try {
       if (!user) throw new Error('No user logged in')
-      
+
       console.log('Atualizando perfil para usuário:', user.id)
 
       const { error } = await supabase
@@ -316,9 +317,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Atualizar estado local
       console.log('Perfil atualizado com sucesso')
       setProfile(prev => prev ? { ...prev, ...updates } : null)
-      
+
       return { error: null }
     } catch (error) {
+      return { error: error as Error }
+    }
+  }
+
+  const updateGenrePreferences = async (genreIds: number[]) => {
+    try {
+      if (!user) throw new Error('No user logged in')
+
+      console.log('Atualizando preferências de gênero:', genreIds)
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          genre_preferences: genreIds,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id)
+
+      if (error) throw error
+
+      // Atualizar estado local
+      console.log('Preferências de gênero atualizadas com sucesso')
+      setProfile(prev => prev ? { ...prev, genre_preferences: genreIds } : null)
+
+      return { error: null }
+    } catch (error) {
+      console.error('Erro ao atualizar preferências de gênero:', error)
       return { error: error as Error }
     }
   }
@@ -332,7 +360,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signOut,
     updateProfile,
-    checkEmailConfirmation
+    updateGenrePreferences
   }
 
   return (
