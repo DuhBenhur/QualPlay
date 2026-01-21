@@ -439,7 +439,7 @@ CREATE POLICY "System can update affinity" ON genre_affinity_scores
 -- View: Estatísticas de filmes
 CREATE OR REPLACE VIEW movie_stats AS
 SELECT 
-  movie_id,
+  m.movie_id,
   COUNT(DISTINCT l.user_id) as likes_count,
   COUNT(DISTINCT r.user_id) as ratings_count,
   ROUND(AVG(r.score)::numeric, 2) as avg_rating,
