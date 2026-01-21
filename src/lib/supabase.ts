@@ -25,14 +25,14 @@ const safeCreateClient = (url: string, key: string, options?: any) => {
     // Validar URL antes de criar o cliente
     if (!url || url === 'about:blank' || url === 'undefined' || url === 'null') {
       console.warn('URL do Supabase inválida detectada, usando fallback');
-      url = 'https://vbogtbtfnwjyemloxgky.supabase.co';
+      url = 'https://ukcxeerrnfevqgnpcxle.supabase.co';
     }
 
     return createClient(url, key, options);
   } catch (error) {
     console.error('Erro ao criar cliente Supabase:', error);
     // Retornar cliente com URL de fallback
-    return createClient('https://vbogtbtfnwjyemloxgky.supabase.co', key, options);
+    return createClient('https://ukcxeerrnfevqgnpcxle.supabase.co', key, options);
   }
 };
 
@@ -50,7 +50,7 @@ const supabase = isSupabaseConfigured ? safeCreateClient(supabaseUrl, supabaseAn
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false, // Desabilitar detecção de URL no Netlify
+    detectSessionInUrl: true, // Necessário para OAuth funcionar
     storageKey: 'qualplay-auth',
     storage: localStorage,
     flowType: 'pkce',
