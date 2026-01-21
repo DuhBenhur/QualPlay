@@ -41,15 +41,24 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
       return;
     }
 
+    // Atualização otimista - mostra imediatamente
+    const previousRating = userRating;
+    setUserRating(score);
     setIsRatingLoading(true);
+    setRatingSaved(true);
+
     const { error } = await rateMovie(user.id, movie.id, score, {
       page: 'details',
       rating_source: 'details'
     });
 
-    if (!error) {
-      setUserRating(score);
-      setRatingSaved(true);
+    if (error) {
+      // Reverter em caso de erro
+      setUserRating(previousRating);
+      setRatingSaved(false);
+      console.error('Erro ao salvar avaliação:', error);
+    } else {
+      // Manter feedback por 2 segundos
       setTimeout(() => setRatingSaved(false), 2000);
     }
     setIsRatingLoading(false);
@@ -60,13 +69,19 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
       throw new Error('Faça login para enviar reviews');
     }
 
-    const { error } = await addQuickReview(user.id, movie.id, content, {
-      page: 'details'
-    });
+    // Timeout de 10s para evitar travar a UI
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Timeout na conexão')), 10000)
+    );
 
-    if (error) {
-      throw error;
+    const submit = async () => {
+      const { error } = await addQuickReview(user.id, movie.id, content, {
+        page: 'details'
+      });
+      if (error) throw error;
     }
+
+    await Promise.race([submit(), timeout]);
   };
 
   const formatDate = (dateString: string) => {

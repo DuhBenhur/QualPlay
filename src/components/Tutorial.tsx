@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  X, 
-  ChevronLeft, 
-  ChevronRight, 
-  Play, 
-  Search, 
-  Plus, 
-  Heart, 
-  Download, 
+import {
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Play,
+  Search,
+  Plus,
+  Heart,
+  Download,
   Sparkles,
   Filter,
   Upload,
@@ -62,6 +62,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
               <li>• Salvar filmes favoritos e criar listas</li>
               <li>• Gerar relatórios em PDF</li>
               <li>• Entender o sistema de recomendações</li>
+              <li>• <strong className="text-purple-400">Novo!</strong> Comunidade, badges e ranking</li>
             </ul>
           </div>
         </div>
@@ -96,7 +97,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-slate-700 rounded-lg p-4">
             <h4 className="text-white font-medium mb-3 flex items-center gap-2">
               <Plus className="text-green-400" size={16} />
@@ -141,7 +142,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-slate-700 rounded-lg p-4">
             <h4 className="text-white font-medium mb-2">🔍 Como funciona:</h4>
             <ul className="text-slate-300 text-sm space-y-1">
@@ -194,10 +195,10 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-lg p-4 border border-purple-500/30">
             <p className="text-purple-200 text-sm">
-              <strong>💡 Exemplo prático:</strong> Adicione "Fernando Meirelles", "José Padilha" e "Cidade de Deus" 
+              <strong>💡 Exemplo prático:</strong> Adicione "Fernando Meirelles", "José Padilha" e "Cidade de Deus"
               para ver todos os filmes relacionados ao cinema brasileiro contemporâneo!
             </p>
           </div>
@@ -232,7 +233,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-slate-700 rounded-lg p-4">
             <h4 className="text-white font-medium mb-2">💡 Dicas de uso:</h4>
             <ul className="text-slate-300 text-sm space-y-1">
@@ -277,16 +278,16 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-slate-700 rounded-lg p-4">
             <h4 className="text-white font-medium mb-2">📝 Exemplo de arquivo:</h4>
             <div className="bg-slate-900 rounded p-3 font-mono text-sm">
               <div className="text-green-400">minha_lista.txt</div>
               <div className="text-slate-300 mt-2">
-                Cidade de Deus<br/>
-                Tropa de Elite<br/>
-                Central do Brasil<br/>
-                O Auto da Compadecida<br/>
+                Cidade de Deus<br />
+                Tropa de Elite<br />
+                Central do Brasil<br />
+                O Auto da Compadecida<br />
                 Carandiru
               </div>
             </div>
@@ -313,7 +314,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
                   <p className="text-slate-400 text-sm">Assista sem custo adicional</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <div className="bg-yellow-600 text-white text-sm px-3 py-2 rounded-full font-medium flex items-center gap-1">
                   💰 Amazon Prime
@@ -323,7 +324,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
                   <p className="text-slate-400 text-sm">Pague para assistir por período limitado</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <div className="bg-red-600 text-white text-sm px-3 py-2 rounded-full font-medium flex items-center gap-1">
                   🛒 Apple TV
@@ -335,7 +336,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-slate-700 rounded-lg p-4">
             <h4 className="text-white font-medium mb-3">🎯 Como usar:</h4>
             <div className="space-y-2">
@@ -344,7 +345,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
               <p className="text-slate-300 text-sm">• <strong>Compare opções:</strong> e prepare a pipoca para um ótimo filme! 🍿🍿</p>
             </div>
           </div>
-          
+
           <div className="bg-gradient-to-r from-cyan-900/50 to-blue-900/50 rounded-lg p-4 border border-cyan-500/30">
             <h4 className="text-white font-medium mb-2">💡 Dicas importantes:</h4>
             <ul className="text-cyan-200 text-sm space-y-1">
@@ -383,7 +384,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-slate-700 rounded-lg p-4">
             <h4 className="text-white font-medium mb-3">🎯 Funcionalidades da lista:</h4>
             <ul className="text-slate-300 text-sm space-y-1">
@@ -393,10 +394,10 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
               <li>• <strong>PDF:</strong> Exporte sua lista personalizada</li>
             </ul>
           </div>
-          
+
           <div className="bg-gradient-to-r from-red-900/50 to-pink-900/50 rounded-lg p-4 border border-red-500/30">
             <p className="text-red-200 text-sm">
-              <strong>💡 Dica:</strong> Use sua lista como um "Para Assistir" personalizado. 
+              <strong>💡 Dica:</strong> Use sua lista como um "Para Assistir" personalizado.
               A ordem que você organizar será mantida no PDF!
             </p>
           </div>
@@ -436,7 +437,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-slate-700 rounded-lg p-4">
             <h4 className="text-white font-medium mb-3">🎯 Tipos de Recomendação:</h4>
             <div className="grid grid-cols-2 gap-2">
@@ -454,7 +455,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-lg p-4 border border-purple-500/30">
             <h4 className="text-white font-medium mb-2">🧠 Tecnologia Avançada:</h4>
             <div className="text-purple-200 text-sm space-y-1">
@@ -497,7 +498,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-slate-700 rounded-lg p-4">
             <h4 className="text-white font-medium mb-2">📋 O que inclui no PDF:</h4>
             <ul className="text-slate-300 text-sm space-y-1">
@@ -509,12 +510,80 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
               <li>• Formatação profissional</li>
             </ul>
           </div>
-          
+
           <div className="bg-gradient-to-r from-orange-900/50 to-yellow-900/50 rounded-lg p-4 border border-orange-500/30">
             <p className="text-orange-200 text-sm">
-              <strong>💡 Uso prático:</strong> Perfeito para compartilhar recomendações com amigos 
+              <strong>💡 Uso prático:</strong> Perfeito para compartilhar recomendações com amigos
               ou manter uma lista offline dos filmes que quer assistir!
             </p>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'community',
+      title: 'Comunidade QualPlay',
+      description: 'Conecte-se com outros cinéfilos e ganhe badges',
+      icon: <Sparkles className="text-purple-400" size={24} />,
+      content: (
+        <div className="space-y-4">
+          <div className="bg-slate-700 rounded-lg p-4">
+            <h4 className="text-white font-medium mb-3">👥 Área da Comunidade:</h4>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="bg-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-white text-sm font-bold">1</div>
+                <div>
+                  <p className="text-white font-medium">Feed de Atividades</p>
+                  <p className="text-slate-400 text-sm">Veja avaliações e reviews de outros usuários em tempo real</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="bg-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-white text-sm font-bold">2</div>
+                <div>
+                  <p className="text-white font-medium">Ranking Mensal</p>
+                  <p className="text-slate-400 text-sm">Compita com outros usuários no leaderboard</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="bg-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-white text-sm font-bold">3</div>
+                <div>
+                  <p className="text-white font-medium">Em Alta</p>
+                  <p className="text-slate-400 text-sm">Descubra os filmes mais comentados da semana</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-slate-700 rounded-lg p-4">
+            <h4 className="text-white font-medium mb-3">🏆 Sistema de Gamificação:</h4>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-slate-600 rounded p-3">
+                <p className="text-yellow-400 font-medium text-sm">⭐ Níveis</p>
+                <p className="text-slate-300 text-xs">De "Espectador" até "Mestre do Cinema"</p>
+              </div>
+              <div className="bg-slate-600 rounded p-3">
+                <p className="text-orange-400 font-medium text-sm">🏅 Badges</p>
+                <p className="text-slate-300 text-xs">14 conquistas para desbloquear</p>
+              </div>
+              <div className="bg-slate-600 rounded p-3">
+                <p className="text-red-400 font-medium text-sm">🔥 Streaks</p>
+                <p className="text-slate-300 text-xs">Sequência de dias ativos</p>
+              </div>
+              <div className="bg-slate-600 rounded p-3">
+                <p className="text-blue-400 font-medium text-sm">📊 Pontos</p>
+                <p className="text-slate-300 text-xs">5pts por avaliação, 10pts por review</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-lg p-4 border border-purple-500/30">
+            <h4 className="text-white font-medium mb-2">💡 Dicas para subir no ranking:</h4>
+            <ul className="text-purple-200 text-sm space-y-1">
+              <li>• Avalie filmes: <strong>+5 pontos</strong> por avaliação</li>
+              <li>• Escreva reviews: <strong>+10 pontos</strong> por review</li>
+              <li>• Mantenha o streak: <strong>+2 pontos</strong> por dia consecutivo</li>
+              <li>• Desbloqueie badges: <strong>+25 pontos</strong> por conquista</li>
+            </ul>
           </div>
         </div>
       )
@@ -536,7 +605,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
                   <li>• <kbd className="bg-slate-500 px-1 rounded">Tab</kbd> = Adicionar à lista</li>
                 </ul>
               </div>
-              
+
               <div className="bg-slate-600 rounded p-3">
                 <h5 className="text-green-400 font-medium mb-1">🎯 Busca Eficiente</h5>
                 <ul className="text-slate-300 text-sm space-y-1">
@@ -545,7 +614,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
                   <li>• Aplique filtros para refinar resultados</li>
                 </ul>
               </div>
-              
+
               <div className="bg-slate-600 rounded p-3">
                 <h5 className="text-purple-400 font-medium mb-1">📱 Mobile</h5>
                 <ul className="text-slate-300 text-sm space-y-1">
@@ -556,11 +625,11 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-gradient-to-r from-indigo-900/50 to-purple-900/50 rounded-lg p-4 border border-indigo-500/30">
             <h4 className="text-white font-medium mb-2">🎉 Agora você está pronto!</h4>
             <p className="text-indigo-200 text-sm">
-              Explore, descubra e organize seus filmes como nunca antes. 
+              Explore, descubra e organize seus filmes como nunca antes.
               A ferramenta está nas suas mãos - divirta-se descobrindo novos filmes!
             </p>
           </div>
@@ -591,9 +660,8 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div className={`bg-slate-800 rounded-lg shadow-2xl transition-all duration-300 ${
-        isMinimized ? 'w-80 h-20' : 'w-full max-w-4xl max-h-[90vh]'
-      }`}>
+      <div className={`bg-slate-800 rounded-lg shadow-2xl transition-all duration-300 ${isMinimized ? 'w-80 h-20' : 'w-full max-w-4xl max-h-[90vh]'
+        }`}>
         {isMinimized ? (
           // Versão minimizada
           <div className="p-4 flex items-center justify-between">
@@ -657,7 +725,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
                 </span>
               </div>
               <div className="w-full bg-slate-600 rounded-full h-2">
-                <div 
+                <div
                   className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${((currentStep + 1) / tutorialSteps.length) * 100}%` }}
                 />
@@ -676,13 +744,12 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
                   <button
                     key={index}
                     onClick={() => goToStep(index)}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      index === currentStep 
-                        ? 'bg-blue-500' 
-                        : index < currentStep 
-                          ? 'bg-green-500' 
-                          : 'bg-slate-600'
-                    }`}
+                    className={`w-2 h-2 rounded-full transition-colors ${index === currentStep
+                      ? 'bg-blue-500'
+                      : index < currentStep
+                        ? 'bg-green-500'
+                        : 'bg-slate-600'
+                      }`}
                   />
                 ))}
               </div>
@@ -706,7 +773,7 @@ const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
                 >
                   Pular Tutorial
                 </button>
-                
+
                 {currentStep === tutorialSteps.length - 1 ? (
                   <button
                     onClick={onClose}

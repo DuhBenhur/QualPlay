@@ -26,36 +26,59 @@ const CommunityFeed: React.FC<CommunityFeedProps> = ({ onMovieClick, limit = 20 
 
     const loadFeed = async () => {
         setLoading(true)
-        const { data, error: feedError } = await getCommunityFeed(limit)
+        setError(null)
 
-        if (feedError) {
-            setError('Erro ao carregar feed')
-            setLoading(false)
-            return
-        }
+        try {
+            // Timeout de 10 segundos
+            const timeout = new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error('Timeout')), 10000)
+            )
 
-        setActivities(data)
-
-        // Carregar dados dos filmes
-        const movieIds = [...new Set(data.map(a => a.movie_id))]
-        const movieInfo: Record<number, { title: string; poster: string }> = {}
-
-        for (const movieId of movieIds) {
-            try {
-                const movie = await getMovieDetails(movieId)
-                if (movie) {
-                    movieInfo[movieId] = {
-                        title: movie.title,
-                        poster: movie.poster_path || ''
-                    }
-                }
-            } catch {
-                movieInfo[movieId] = { title: `Filme #${movieId}`, poster: '' }
+            const fetchFeed = async () => {
+                const { data, error: feedError } = await getCommunityFeed(limit)
+                if (feedError) throw feedError
+                return data
             }
-        }
 
-        setMovieData(movieInfo)
-        setLoading(false)
+            const data = await Promise.race([fetchFeed(), timeout]) as CommunityActivity[]
+
+            if (!data || data.length === 0) {
+                setActivities([])
+                setLoading(false)
+                return
+            }
+
+            setActivities(data)
+
+            // Carregar dados dos filmes
+            const movieIds = [...new Set(data.map(a => a.movie_id))]
+            const movieInfo: Record<number, { title: string; poster: string }> = {}
+
+            // Carregar filmes em paralelo para ser mais rápido
+            await Promise.all(movieIds.map(async (movieId) => {
+                try {
+                    const movie = await getMovieDetails(movieId)
+                    if (movie) {
+                        movieInfo[movieId] = {
+                            title: movie.title,
+                            poster: movie.poster_path || ''
+                        }
+                    } else {
+                        movieInfo[movieId] = { title: `Filme #${movieId}`, poster: '' }
+                    }
+                } catch {
+                    movieInfo[movieId] = { title: `Filme #${movieId}`, poster: '' }
+                }
+            }))
+
+            setMovieData(movieInfo)
+        } catch (err) {
+            console.error('Erro ao carregar feed:', err)
+            setError('Não foi possível carregar o feed. Tente novamente.')
+            // Se der erro, pelo menos limpa o loading
+        } finally {
+            setLoading(false)
+        }
     }
 
     const formatTimeAgo = (dateString: string): string => {

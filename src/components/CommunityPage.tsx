@@ -100,98 +100,143 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onMovieClick, onLogin }) 
     }
 
     const loadStats = async () => {
-        if (!supabase) return
-
-        try {
-            // Contagem de ratings
-            const { count: ratingsCount } = await supabase
-                .from('ratings')
-                .select('*', { count: 'exact', head: true })
-
-            // Contagem de reviews
-            const { count: reviewsCount } = await supabase
-                .from('comments')
-                .select('*', { count: 'exact', head: true })
-                .is('parent_id', null)
-
-            // Usuários ativos (com pelo menos uma interação)
-            const { data: activeUsersData } = await supabase
-                .from('ratings')
-                .select('user_id')
-
-            const uniqueUsers = new Set(activeUsersData?.map(r => r.user_id) || [])
-
+        if (!supabase) {
+            // Se não há Supabase, usar valores padrão
             setStats({
-                totalRatings: ratingsCount || 0,
-                totalReviews: reviewsCount || 0,
-                activeUsers: uniqueUsers.size,
+                totalRatings: 0,
+                totalReviews: 0,
+                activeUsers: 0,
                 topRatedMovieId: null
             })
+            return
+        }
+
+        try {
+            // Timeout de 5 segundos para evitar loading infinito
+            const timeout = new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error('Timeout')), 5000)
+            )
+
+            const fetchData = async () => {
+                // Contagem de ratings
+                const ratingsPromise = supabase
+                    .from('ratings')
+                    .select('*', { count: 'exact', head: true })
+
+                // Contagem de reviews
+                const reviewsPromise = (supabase
+                    .from('comments')
+                    .select('*', { count: 'exact', head: true }) as any)
+                    .is('parent_id', null)
+
+                // Usuários ativos
+                const usersPromise = supabase
+                    .from('ratings')
+                    .select('user_id')
+
+                const [ratingsRes, reviewsRes, usersRes] = await Promise.all([
+                    ratingsPromise,
+                    reviewsPromise,
+                    usersPromise
+                ])
+
+                const uniqueUsers = new Set(((usersRes as any).data as any[] || []).map((r: any) => r.user_id))
+
+                return {
+                    totalRatings: (ratingsRes as any).count || 0,
+                    totalReviews: (reviewsRes as any).count || 0,
+                    activeUsers: uniqueUsers.size,
+                    topRatedMovieId: null
+                }
+            }
+
+            const stats = await Promise.race([fetchData(), timeout])
+            setStats(stats as CommunityStats)
         } catch (error) {
             console.error('Error loading community stats:', error)
+            // Definir valores padrão em caso de erro
+            setStats({
+                totalRatings: 0,
+                totalReviews: 0,
+                activeUsers: 0,
+                topRatedMovieId: null
+            })
         }
     }
 
     const loadTrendingMovies = async () => {
-        if (!supabase) return
+        if (!supabase) {
+            setTrendingMovies([])
+            return
+        }
 
         try {
-            // Buscar filmes mais avaliados recentemente (últimos 7 dias)
-            const weekAgo = new Date()
-            weekAgo.setDate(weekAgo.getDate() - 7)
+            // Timeout de 8 segundos
+            const timeout = new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error('Timeout')), 8000)
+            )
 
-            const { data: ratings } = await supabase
-                .from('ratings')
-                .select('movie_id, score')
-                .gte('created_at', weekAgo.toISOString())
+            const fetchTrending = async () => {
+                // Buscar filmes mais avaliados recentemente (últimos 7 dias)
+                const weekAgo = new Date()
+                weekAgo.setDate(weekAgo.getDate() - 7)
 
-            if (!ratings || ratings.length === 0) {
-                setTrendingMovies([])
-                return
-            }
+                const { data: ratings } = await (supabase
+                    .from('ratings')
+                    .select('movie_id, score') as any)
+                    .gte('created_at', weekAgo.toISOString())
 
-            // Agregar por filme
-            const movieStats: Record<number, { count: number; totalScore: number }> = {}
-            ratings.forEach(r => {
-                if (!movieStats[r.movie_id]) {
-                    movieStats[r.movie_id] = { count: 0, totalScore: 0 }
+                if (!ratings || ratings.length === 0) {
+                    return []
                 }
-                movieStats[r.movie_id].count++
-                movieStats[r.movie_id].totalScore += r.score
-            })
 
-            // Top 5 filmes
-            const topMovieIds = Object.entries(movieStats)
-                .sort((a, b) => b[1].count - a[1].count)
-                .slice(0, 5)
-                .map(([id, stats]) => ({
-                    movie_id: parseInt(id),
-                    rating_count: stats.count,
-                    avg_rating: stats.totalScore / stats.count
-                }))
-
-            // Carregar detalhes dos filmes
-            const moviesWithDetails: TrendingMovie[] = []
-            for (const movie of topMovieIds) {
-                try {
-                    const details = await getMovieDetails(movie.movie_id)
-                    if (details) {
-                        moviesWithDetails.push({
-                            movie_id: movie.movie_id,
-                            title: details.title,
-                            poster_path: details.poster_path,
-                            rating_count: movie.rating_count,
-                            avg_rating: movie.avg_rating
-                        })
+                // Agregar por filme
+                const movieStats: Record<number, { count: number; totalScore: number }> = {}
+                ratings.forEach((r: any) => {
+                    if (!movieStats[r.movie_id]) {
+                        movieStats[r.movie_id] = { count: 0, totalScore: 0 }
                     }
-                } catch (error) {
-                    console.error(`Error loading movie ${movie.movie_id}:`, error)
+                    movieStats[r.movie_id].count++
+                    movieStats[r.movie_id].totalScore += r.score
+                })
+
+                // Top 5 filmes
+                const topMovieIds = Object.entries(movieStats)
+                    .sort((a, b) => b[1].count - a[1].count)
+                    .slice(0, 5)
+                    .map(([id, stats]) => ({
+                        movie_id: parseInt(id),
+                        rating_count: stats.count,
+                        avg_rating: stats.totalScore / stats.count
+                    }))
+
+                // Carregar detalhes dos filmes
+                const moviesWithDetails: TrendingMovie[] = []
+                for (const movie of topMovieIds) {
+                    try {
+                        const details = await getMovieDetails(movie.movie_id)
+                        if (details) {
+                            moviesWithDetails.push({
+                                movie_id: movie.movie_id,
+                                title: details.title,
+                                poster_path: details.poster_path,
+                                rating_count: movie.rating_count,
+                                avg_rating: movie.avg_rating
+                            })
+                        }
+                    } catch (error) {
+                        console.error(`Error loading movie ${movie.movie_id}:`, error)
+                    }
                 }
+
+                return moviesWithDetails
             }
 
-            setTrendingMovies(moviesWithDetails)
+            const movies = await Promise.race([fetchTrending(), timeout])
+            setTrendingMovies(movies as TrendingMovie[])
         } catch (error) {
             console.error('Error loading trending movies:', error)
+            setTrendingMovies([])
         }
     }
 

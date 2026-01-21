@@ -23,18 +23,26 @@ const UserMovieStats: React.FC = () => {
         setLoading(false);
         return;
       }
-      
-      if (!user) {
-        setLoading(false);
-        return;
-      }
+
+      setLoading(true);
 
       try {
-        const { data, error } = await UserMovieService.getUserStats();
-        if (error) throw error;
-        setStats(data);
+        const timeout = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout')), 8000)
+        );
+
+        const fetchData = async () => {
+          const { data, error } = await UserMovieService.getUserStats();
+          if (error) throw error;
+          return data;
+        };
+
+        const data = await Promise.race([fetchData(), timeout]);
+        setStats(data as UserStats);
       } catch (error) {
         console.error('Error fetching user stats:', error);
+        // Em caso de erro, definimos um estado vazio para não travar a tela
+        setStats(null);
       } finally {
         setLoading(false);
       }
@@ -79,7 +87,7 @@ const UserMovieStats: React.FC = () => {
   const formatWatchTime = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
-    
+
     if (days > 0) {
       return `${days} dia${days > 1 ? 's' : ''} e ${hours % 24} hora${hours % 24 !== 1 ? 's' : ''}`;
     }
@@ -103,25 +111,25 @@ const UserMovieStats: React.FC = () => {
           <div className="text-2xl font-bold text-white">{stats.totalMovies}</div>
           <div className="text-slate-400 text-sm">Total de Filmes</div>
         </div>
-        
+
         <div className="bg-slate-700 rounded-lg p-4 text-center">
           <Check className="text-green-400 mx-auto mb-2" size={24} />
           <div className="text-2xl font-bold text-white">{stats.watchedMovies}</div>
           <div className="text-slate-400 text-sm">Assistidos</div>
         </div>
-        
+
         <div className="bg-slate-700 rounded-lg p-4 text-center">
           <Star className="text-yellow-400 mx-auto mb-2" size={24} />
           <div className="text-2xl font-bold text-white">{stats.averageRating.toFixed(1)}</div>
           <div className="text-slate-400 text-sm">Nota Média</div>
         </div>
-        
+
         <div className="bg-slate-700 rounded-lg p-4 text-center">
           <Clock className="text-purple-400 mx-auto mb-2" size={24} />
           <div className="text-lg font-bold text-white">{formatWatchTime(stats.watchTime)}</div>
           <div className="text-slate-400 text-sm">Tempo Assistido</div>
         </div>
-        
+
         <div className="bg-slate-700 rounded-lg p-4 text-center">
           <Calendar className="text-cyan-400 mx-auto mb-2" size={24} />
           <div className="text-lg font-bold text-white">
@@ -137,16 +145,15 @@ const UserMovieStats: React.FC = () => {
           <Award className="text-yellow-400" size={18} />
           Seus Gêneros Favoritos
         </h4>
-        
+
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {stats.favoriteGenres.map((genre, index) => (
-            <div 
-              key={genre} 
+            <div
+              key={genre}
               className="bg-slate-600 rounded-lg p-3 text-center"
               style={{
-                background: `linear-gradient(to bottom right, ${
-                  ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6'][index % 5]
-                }33, transparent)`
+                background: `linear-gradient(to bottom right, ${['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6'][index % 5]
+                  }33, transparent)`
               }}
             >
               <div className="text-white font-medium">{genre}</div>
