@@ -345,50 +345,59 @@ export async function updateProfileVisibility(userId: string, isPublic: boolean)
 }
 
 export async function getLeaderboard(limit: number = 10): Promise<LeaderboardEntry[]> {
-    if (!supabase) return []
+    if (!supabase) {
+        return []
+    }
 
     try {
-        const { data, error } = await supabase
-            .from('user_gamification')
-            .select(`
-                user_id,
-                total_points,
-                current_level,
-                badges_earned,
-                is_profile_public
-            `)
-            .eq('is_profile_public', true)
-            .order('total_points', { ascending: false })
-            .limit(limit)
-
-        if (error) {
-            console.error('Error fetching leaderboard:', error)
-            return []
-        }
-
-        // Get user profiles for display names
-        const entries: LeaderboardEntry[] = await Promise.all(
-            (data || []).map(async (entry: any, index: number) => {
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('display_name, username')
-                    .eq('id', entry.user_id)
-                    .single()
-
-                return {
-                    user_id: entry.user_id,
-                    display_name: (profile as any)?.display_name || (profile as any)?.username || 'Anônimo',
-                    total_points: entry.total_points,
-                    current_level: entry.current_level,
-                    badges_count: entry.badges_earned?.length || 0,
-                    rank: index + 1,
-                }
-            })
+        // Timeout de 2 segundos
+        const timeout = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Timeout')), 2000)
         )
 
+        const fetchLeaderboard = async () => {
+            const { data, error } = await supabase
+                .from('user_gamification')
+                .select(`
+                    user_id,
+                    total_points,
+                    current_level,
+                    badges_earned,
+                    is_profile_public
+                `)
+                .eq('is_profile_public', true)
+                .order('total_points', { ascending: false })
+                .limit(limit)
+
+            if (error) throw error
+
+            // Get user profiles for display names
+            const entries: LeaderboardEntry[] = await Promise.all(
+                (data || []).map(async (entry: any, index: number) => {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('display_name, username')
+                        .eq('id', entry.user_id)
+                        .single()
+
+                    return {
+                        user_id: entry.user_id,
+                        display_name: (profile as any)?.display_name || (profile as any)?.username || 'Anônimo',
+                        total_points: entry.total_points,
+                        current_level: entry.current_level,
+                        badges_count: entry.badges_earned?.length || 0,
+                        rank: index + 1,
+                    }
+                })
+            )
+
+            return entries
+        }
+
+        const entries = await Promise.race([fetchLeaderboard(), timeout])
         return entries
     } catch (error) {
-        console.error('Error in getLeaderboard:', error)
+        console.warn('[Leaderboard] Backend unavailable:', error)
         return []
     }
 }

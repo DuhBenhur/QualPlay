@@ -32,9 +32,9 @@ export class UserMovieService {
 
       const { data, error } = await supabase
         .from('user_movies')
-        .upsert(userMovie, { 
+        .upsert(userMovie, {
           onConflict: 'user_id,movie_id',
-          ignoreDuplicates: false 
+          ignoreDuplicates: false
         })
         .select()
         .single()
@@ -189,10 +189,10 @@ export class UserMovieService {
   static async getUserStats(): Promise<{
     data: {
       totalMovies: number
-      watchedMovies: number 
-      averageRating: number 
-      favoriteGenres: string[] 
-      watchTime: number 
+      watchedMovies: number
+      averageRating: number
+      favoriteGenres: string[]
+      watchTime: number
     } | null
     error: Error | null
   }> {
@@ -200,48 +200,63 @@ export class UserMovieService {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return { data: null, error: new Error('User not authenticated') }
 
-      const { data: movies, error } = await supabase
-        .from('user_movies')
-        .select('*')
-        .eq('user_id', user.id)
+      // Timeout agressivo de 2 segundos
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Stats timeout')), 2000)
+      )
 
-      if (error) throw error
+      const fetchStats = async () => {
+        const { data: movies, error } = await supabase
+          .from('user_movies')
+          .select('*')
+          .eq('user_id', user.id)
 
-      const watchedMovies = movies?.filter(m => m.status === 'watched') || []
-      const totalMovies = movies?.length || 0 
-      
-      const averageRating = watchedMovies.length > 0
-        ? watchedMovies.reduce((sum, m) => sum + (m.personal_rating || 0), 0) / watchedMovies.length
-        : 0
+        if (error) throw error
 
-      // Calcular gêneros favoritos
-      const genreCount: Record<string, number> = {}
-      movies?.forEach(movie => {
-        movie.movie_data.genres.forEach(genre => {
-          genreCount[genre] = (genreCount[genre] || 0) + 1
+        const watchedMovies = movies?.filter(m => m.status === 'watched') || []
+        const totalMovies = movies?.length || 0
+
+        const averageRating = watchedMovies.length > 0
+          ? watchedMovies.reduce((sum, m) => sum + (m.personal_rating || 0), 0) / watchedMovies.length
+          : 0
+
+        // Calcular gêneros favoritos
+        const genreCount: Record<string, number> = {}
+        movies?.forEach(movie => {
+          movie.movie_data.genres.forEach(genre => {
+            genreCount[genre] = (genreCount[genre] || 0) + 1
+          })
         })
-      })
 
-      const favoriteGenres = Object.entries(genreCount)
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 5)
-        .map(([genre]) => genre)
+        const favoriteGenres = Object.entries(genreCount)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 5)
+          .map(([genre]) => genre)
 
-      // Estimar tempo assistido (assumindo 120 min por filme)
-      const watchTime = watchedMovies.length * 120
+        // Estimar tempo assistido (assumindo 120 min por filme)
+        const watchTime = watchedMovies.length * 120
 
-      return {
-        data: {
+        return {
           totalMovies,
           watchedMovies: watchedMovies.length,
           averageRating,
           favoriteGenres,
           watchTime
-        },
+        }
+      }
+
+      const stats = await Promise.race([fetchStats(), timeout])
+
+      return {
+        data: stats,
         error: null
       }
     } catch (error) {
-      return { data: null, error: error as Error }
+      console.error('[UserStats] Error fetching stats:', error)
+      return {
+        data: null,
+        error: error as Error
+      }
     }
   }
 }

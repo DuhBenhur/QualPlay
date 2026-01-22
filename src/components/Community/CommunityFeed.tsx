@@ -5,7 +5,7 @@
 // ============================================================================
 
 import React, { useEffect, useState } from 'react'
-import { Star, MessageCircle, Heart, Clock, Film, User } from 'lucide-react'
+import { Star, MessageCircle, Heart, Clock, Film, User, Sparkles, Search } from 'lucide-react'
 import { getCommunityFeed, CommunityActivity } from '../../services/interactionService'
 import { getImageUrl, getMovieDetails } from '../../services/tmdbApi'
 
@@ -29,9 +29,9 @@ const CommunityFeed: React.FC<CommunityFeedProps> = ({ onMovieClick, limit = 20 
         setError(null)
 
         try {
-            // Timeout de 10 segundos
+            // Timeout de 3 segundos
             const timeout = new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error('Timeout')), 10000)
+                setTimeout(() => reject(new Error('Timeout')), 3000)
             )
 
             const fetchFeed = async () => {
@@ -112,11 +112,23 @@ const CommunityFeed: React.FC<CommunityFeedProps> = ({ onMovieClick, limit = 20 
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center py-12">
-                <div className="flex flex-col items-center gap-3">
-                    <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-slate-400">Carregando atividades...</span>
-                </div>
+            <div className="space-y-4 py-4">
+                {/* Loading Skeleton */}
+                {[...Array(3)].map((_, i) => (
+                    <div key={i} className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 animate-pulse">
+                        <div className="flex gap-4">
+                            <div className="w-14 h-20 bg-slate-700 rounded" />
+                            <div className="flex-1 space-y-3">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 bg-slate-700 rounded-full" />
+                                    <div className="h-4 w-32 bg-slate-700 rounded" />
+                                </div>
+                                <div className="h-4 w-full bg-slate-700 rounded" />
+                                <div className="h-4 w-2/3 bg-slate-700 rounded" />
+                            </div>
+                        </div>
+                    </div>
+                ))}
             </div>
         )
     }
@@ -138,11 +150,39 @@ const CommunityFeed: React.FC<CommunityFeedProps> = ({ onMovieClick, limit = 20 
     if (activities.length === 0) {
         return (
             <div className="text-center py-12">
-                <Film size={48} className="mx-auto mb-4 text-slate-600" />
-                <p className="text-slate-400">Nenhuma atividade recente</p>
-                <p className="text-slate-500 text-sm mt-2">
-                    Avalie filmes para aparecer aqui!
+                <div className="relative inline-block mb-6">
+                    <Film size={64} className="mx-auto text-slate-600" />
+                    <Sparkles className="absolute -top-2 -right-2 text-blue-400" size={24} />
+                </div>
+
+                <h3 className="text-2xl font-bold text-white mb-3">
+                    🎬 Seja o Primeiro!
+                </h3>
+
+                <p className="text-slate-300 mb-2 max-w-sm mx-auto">
+                    Ainda não há atividades para exibir.
                 </p>
+                <p className="text-slate-400 text-sm mb-6 max-w-sm mx-auto">
+                    Avalie um filme agora e mostre para a comunidade o que você está assistindo!
+                </p>
+
+                {/* CTA */}
+                <button
+                    onClick={() => {
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                    }}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg shadow-blue-500/25 font-medium"
+                >
+                    <Search size={18} />
+                    Avaliar Meu Primeiro Filme
+                </button>
+
+                {/* Insight */}
+                <div className="mt-6 p-4 bg-blue-900/20 border border-blue-500/20 rounded-lg max-w-md mx-auto">
+                    <p className="text-blue-300 text-sm">
+                        💡 Sua avaliação será vista por outros cinéfilos e ajudará a criar recomendações melhores!
+                    </p>
+                </div>
             </div>
         )
     }

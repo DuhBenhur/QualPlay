@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BarChart3, Clock, Film, Star, Award, Calendar, Check } from 'lucide-react';
+import { BarChart3, Clock, Film, Star, Award, Calendar, Check, Search, TrendingUp } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { UserMovieService } from '../services/userMovieService';
 
@@ -10,6 +10,8 @@ interface UserStats {
   favoriteGenres: string[];
   watchTime: number;
 }
+
+const MINIMUM_RATINGS = 5;
 
 const UserMovieStats: React.FC = () => {
   const { user } = useAuth();
@@ -28,7 +30,7 @@ const UserMovieStats: React.FC = () => {
 
       try {
         const timeout = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout')), 8000)
+          setTimeout(() => reject(new Error('Timeout')), 2000)
         );
 
         const fetchData = async () => {
@@ -59,25 +61,92 @@ const UserMovieStats: React.FC = () => {
   if (loading) {
     return (
       <div className="bg-slate-800 rounded-lg p-6 mb-6">
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          <span className="ml-3 text-white">Carregando estatísticas...</span>
+        {/* Loading Skeleton */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-6 h-6 bg-slate-700 rounded animate-pulse" />
+          <div className="h-6 w-48 bg-slate-700 rounded animate-pulse" />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="bg-slate-700 rounded-lg p-4 animate-pulse">
+              <div className="h-6 w-6 mx-auto mb-2 bg-slate-600 rounded" />
+              <div className="h-8 w-16 mx-auto mb-2 bg-slate-600 rounded" />
+              <div className="h-4 w-20 mx-auto bg-slate-600 rounded" />
+            </div>
+          ))}
         </div>
       </div>
     );
   }
 
-  if (!stats || stats.totalMovies === 0) {
+  // Verificar se há dados suficientes (threshold de 5 avaliações)
+  const hasEnoughData = stats && stats.totalMovies >= MINIMUM_RATINGS;
+  const ratingsCount = stats?.totalMovies || 0;
+  const progress = Math.min((ratingsCount / MINIMUM_RATINGS) * 100, 100);
+
+  if (!hasEnoughData) {
     return (
       <div className="bg-slate-800 rounded-lg p-6 mb-6">
-        <div className="text-center py-4">
-          <BarChart3 className="mx-auto text-slate-600 mb-4" size={48} />
-          <h3 className="text-xl font-semibold text-white mb-2">
-            Estatísticas Pessoais
+        <div className="flex items-center gap-3 mb-6">
+          <BarChart3 className="text-blue-400" size={24} />
+          <h3 className="text-xl font-semibold text-white">
+            Suas Estatísticas
           </h3>
-          <p className="text-slate-400 mb-4">
-            Você ainda não tem filmes na sua lista. Adicione filmes para ver estatísticas personalizadas.
+        </div>
+
+        <div className="text-center py-6">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-900/30 border-2 border-blue-500/50 mb-4">
+            <TrendingUp className="text-blue-400" size={36} />
+          </div>
+
+          <h4 className="text-xl font-bold text-white mb-2">
+            {ratingsCount === 0 ? 'Comece Sua Jornada!' : 'Você Está Quase Lá!'}
+          </h4>
+
+          <p className="text-slate-300 mb-6 max-w-md mx-auto">
+            {ratingsCount === 0
+              ? 'Avalie seus primeiros filmes para desbloquear estatísticas personalizadas incríveis!'
+              : `Avalie mais ${MINIMUM_RATINGS - ratingsCount} ${MINIMUM_RATINGS - ratingsCount === 1 ? 'filme' : 'filmes'} para desbloquear suas estatísticas personalizadas.`
+            }
           </p>
+
+          {/* Progress Bar */}
+          <div className="max-w-sm mx-auto mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-slate-400 text-sm">
+                <Film className="inline mr-1" size={14} />
+                {ratingsCount} de {MINIMUM_RATINGS} avaliações
+              </span>
+              <span className="text-blue-400 font-bold text-sm">
+                {Math.round(progress)}%
+              </span>
+            </div>
+            <div className="w-full h-3 bg-slate-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500 ease-out rounded-full"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+
+          {/* CTA */}
+          <button
+            onClick={() => {
+              // Scroll to top para ir para busca
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg shadow-blue-500/25 font-medium"
+          >
+            <Search size={18} />
+            Encontrar Filmes para Avaliar
+          </button>
+
+          {/* Motivação */}
+          <div className="mt-6 p-4 bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-lg border border-blue-500/20">
+            <p className="text-blue-300 text-sm">
+              ✨ Desbloqueie insights sobre seus gêneros favoritos, tempo assistido e muito mais!
+            </p>
+          </div>
         </div>
       </div>
     );

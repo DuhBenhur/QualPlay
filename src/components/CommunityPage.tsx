@@ -113,9 +113,9 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onMovieClick, onLogin }) 
         }
 
         try {
-            // Timeout de 5 segundos para evitar loading infinito
+            // Timeout de 2 segundos para evitar loading infinito
             const timeout = new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error('Timeout')), 5000)
+                setTimeout(() => reject(new Error('Timeout')), 2000)
             )
 
             const fetchData = async () => {
@@ -172,9 +172,9 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onMovieClick, onLogin }) 
         }
 
         try {
-            // Timeout de 8 segundos
+            // Timeout de 3 segundos
             const timeout = new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error('Timeout')), 8000)
+                setTimeout(() => reject(new Error('Timeout')), 3000)
             )
 
             const fetchTrending = async () => {
