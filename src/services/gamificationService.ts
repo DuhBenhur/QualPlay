@@ -5,20 +5,18 @@
 // ============================================================================
 
 import { supabase } from '../lib/supabase'
+import {
+    BADGES,
+    LEVELS,
+    POINTS,
+    Badge,
+    LevelInfo,
+    getBadgeTierColor
+} from '../constants/gamification'
 
 // ============================================================================
 // TYPES
 // ============================================================================
-
-export interface Badge {
-    id: string
-    name: string
-    description: string
-    icon: string
-    category: 'rating' | 'review' | 'watching' | 'streak' | 'special'
-    requirement: number
-    tier?: 'bronze' | 'silver' | 'gold'
-}
 
 export interface UserGamification {
     user_id: string
@@ -33,14 +31,6 @@ export interface UserGamification {
     updated_at: string
 }
 
-export interface LevelInfo {
-    level: number
-    title: string
-    minPoints: number
-    maxPoints: number
-    color: string
-}
-
 export interface LeaderboardEntry {
     user_id: string
     display_name: string
@@ -48,53 +38,6 @@ export interface LeaderboardEntry {
     current_level: number
     badges_count: number
     rank: number
-}
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
-export const BADGES: Badge[] = [
-    // Rating Badges
-    { id: 'first_rating', name: 'Estreante', description: 'Avaliou seu primeiro filme', icon: '🎬', category: 'rating', requirement: 1 },
-    { id: 'critic_bronze', name: 'Crítico Bronze', description: 'Avaliou 10 filmes', icon: '⭐', category: 'rating', requirement: 10, tier: 'bronze' },
-    { id: 'critic_silver', name: 'Crítico Prata', description: 'Avaliou 50 filmes', icon: '⭐', category: 'rating', requirement: 50, tier: 'silver' },
-    { id: 'critic_gold', name: 'Crítico Ouro', description: 'Avaliou 100 filmes', icon: '⭐', category: 'rating', requirement: 100, tier: 'gold' },
-
-    // Review Badges
-    { id: 'first_review', name: 'Opinião Formada', description: 'Escreveu seu primeiro review', icon: '📝', category: 'review', requirement: 1 },
-    { id: 'reviewer_5', name: 'Comentarista', description: 'Escreveu 5 reviews', icon: '💬', category: 'review', requirement: 5 },
-    { id: 'reviewer_20', name: 'Articulador', description: 'Escreveu 20 reviews', icon: '✍️', category: 'review', requirement: 20 },
-
-    // Watching Badges
-    { id: 'watched_10', name: 'Cinéfilo', description: 'Assistiu 10 filmes', icon: '🎥', category: 'watching', requirement: 10 },
-    { id: 'watched_50', name: 'Maratonista', description: 'Assistiu 50 filmes', icon: '🔥', category: 'watching', requirement: 50 },
-    { id: 'watched_100', name: 'Lenda do Cinema', description: 'Assistiu 100 filmes', icon: '🏆', category: 'watching', requirement: 100 },
-
-    // Streak Badges
-    { id: 'streak_7', name: 'Consistente', description: '7 dias seguidos ativo', icon: '📅', category: 'streak', requirement: 7 },
-    { id: 'streak_30', name: 'Dedicado', description: '30 dias seguidos ativo', icon: '🗓️', category: 'streak', requirement: 30 },
-    { id: 'streak_100', name: 'Imparável', description: '100 dias seguidos ativo', icon: '💪', category: 'streak', requirement: 100 },
-
-    // Special Badges
-    { id: 'genre_expert', name: 'Especialista', description: '20 filmes do mesmo gênero', icon: '🎯', category: 'special', requirement: 20 },
-    { id: 'early_adopter', name: 'Pioneiro', description: 'Um dos primeiros usuários', icon: '🚀', category: 'special', requirement: 1 },
-]
-
-export const LEVELS: LevelInfo[] = [
-    { level: 1, title: 'Espectador', minPoints: 0, maxPoints: 50, color: '#6B7280' },
-    { level: 2, title: 'Cinéfilo Iniciante', minPoints: 51, maxPoints: 150, color: '#10B981' },
-    { level: 3, title: 'Crítico Amador', minPoints: 151, maxPoints: 400, color: '#3B82F6' },
-    { level: 4, title: 'Crítico Profissional', minPoints: 401, maxPoints: 1000, color: '#8B5CF6' },
-    { level: 5, title: 'Mestre do Cinema', minPoints: 1001, maxPoints: Infinity, color: '#F59E0B' },
-]
-
-export const POINTS = {
-    RATE_MOVIE: 5,
-    WRITE_REVIEW: 10,
-    CREATE_LIST: 15,
-    STREAK_BONUS: 2,
-    BADGE_EARNED: 25,
 }
 
 // ============================================================================
@@ -119,15 +62,6 @@ export function getProgressToNextLevel(points: number): number {
 
 export function getBadgeById(id: string): Badge | undefined {
     return BADGES.find(b => b.id === id)
-}
-
-export function getBadgeTierColor(tier?: string): string {
-    switch (tier) {
-        case 'bronze': return '#CD7F32'
-        case 'silver': return '#C0C0C0'
-        case 'gold': return '#FFD700'
-        default: return '#3B82F6'
-    }
 }
 
 // ============================================================================
@@ -257,6 +191,13 @@ export async function addPoints(
 
         // Log activity
         console.log(`[Gamification] ${reason}: +${points} pts for user ${userId}`)
+
+        // Notify UI components
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('gamificationUpdated', {
+                detail: { newPoints, newLevel, newBadges }
+            }))
+        }
 
         return { newPoints, newLevel, newBadges }
     } catch (error) {
@@ -403,6 +344,88 @@ export async function getLeaderboard(limit: number = 10): Promise<LeaderboardEnt
 }
 
 // ============================================================================
+// SYNC LOGIC (RETROACTIVE)
+// ============================================================================
+
+export async function syncUserGamification(userId: string): Promise<UserGamification | null> {
+    if (!supabase || !userId) return null
+
+    try {
+        console.log('[Gamification] Starting sync for user:', userId)
+
+        let gamification = await getUserGamification(userId)
+        if (!gamification) {
+            gamification = await initializeUserGamification(userId)
+        }
+        if (!gamification) return null
+
+        const earnedBadges = new Set(gamification.badges_earned || [])
+        const newBadges: string[] = []
+        let pointsToAdd = 0
+
+        // 1. Check Ratings
+        const { count: ratingsCount } = await supabase
+            .from('ratings')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', userId)
+
+        const ratings = ratingsCount || 0
+        console.log(`[Gamification Sync] Found ${ratings} ratings`)
+
+        if (ratings >= 1 && !earnedBadges.has('first_rating')) { newBadges.push('first_rating'); pointsToAdd += POINTS.BADGE_EARNED }
+        if (ratings >= 10 && !earnedBadges.has('critic_bronze')) { newBadges.push('critic_bronze'); pointsToAdd += POINTS.BADGE_EARNED }
+        if (ratings >= 50 && !earnedBadges.has('critic_silver')) { newBadges.push('critic_silver'); pointsToAdd += POINTS.BADGE_EARNED }
+        if (ratings >= 100 && !earnedBadges.has('critic_gold')) { newBadges.push('critic_gold'); pointsToAdd += POINTS.BADGE_EARNED }
+
+        // 2. Check Reviews
+        const { count: reviewsCount } = await supabase
+            .from('comments')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .is('parent_id', null)
+
+        const reviews = reviewsCount || 0
+        console.log(`[Gamification Sync] Found ${reviews} reviews`)
+
+        if (reviews >= 1 && !earnedBadges.has('first_review')) { newBadges.push('first_review'); pointsToAdd += POINTS.BADGE_EARNED }
+        if (reviews >= 5 && !earnedBadges.has('reviewer_5')) { newBadges.push('reviewer_5'); pointsToAdd += POINTS.BADGE_EARNED }
+        if (reviews >= 20 && !earnedBadges.has('reviewer_20')) { newBadges.push('reviewer_20'); pointsToAdd += POINTS.BADGE_EARNED }
+
+        // 3. Recalculate Points logic (Simplified retroactive fix)
+        // If we found new badges, we add points and badges
+        if (newBadges.length > 0) {
+            console.log('[Gamification Sync] New badges found:', newBadges)
+
+            const updatedBadges = [...gamification.badges_earned, ...newBadges]
+            const updatedPoints = gamification.total_points + pointsToAdd
+            const updatedLevel = getLevelFromPoints(updatedPoints).level
+
+            const { data, error } = await supabase
+                .from('user_gamification')
+                .update({
+                    badges_earned: updatedBadges,
+                    total_points: updatedPoints,
+                    current_level: updatedLevel,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('user_id', userId)
+                .select()
+                .single()
+
+            if (error) throw error
+            return data as UserGamification
+        }
+
+        console.log('[Gamification Sync] No new badges found.')
+        return gamification
+
+    } catch (error) {
+        console.error('[Gamification] Error in sync:', error)
+        return null
+    }
+}
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 
@@ -410,6 +433,7 @@ export const GamificationService = {
     getUserGamification,
     initializeUserGamification,
     addPoints,
+    syncUserGamification, // Added here
     updateProfileVisibility,
     getLeaderboard,
     getLevelFromPoints,

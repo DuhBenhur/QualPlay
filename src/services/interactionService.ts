@@ -6,6 +6,8 @@
 // ============================================================================
 
 import { supabase } from '../lib/supabase'
+import { addPoints } from './gamificationService'
+import { POINTS } from '../constants/gamification'
 import type {
     Rating,
     RatingInsert,
@@ -153,6 +155,9 @@ export async function rateMovie(
                 page: context?.page || 'details',
                 source: 'rating_new'
             })
+
+            // Gamification: Add points
+            addPoints(userId, POINTS.RATE_MOVIE, 'Avaliação de Filme')
         }
 
         console.log(`[Rating] Movie ${movieId} rated ${score} stars`)
@@ -264,6 +269,9 @@ export async function addQuickReview(
             page: context?.page || 'details',
             source: 'quick_review'
         })
+
+        // Gamification: Add points
+        addPoints(userId, POINTS.WRITE_REVIEW, 'Review Rápida')
 
         console.log(`[Review] Quick review added for movie ${movieId}`)
         return { data, error: null }

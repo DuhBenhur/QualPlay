@@ -4,7 +4,10 @@ import { MovieDetails as MovieDetailsType } from '../types/movie';
 import { getImageUrl } from '../services/tmdbApi';
 import { useAuth } from '../contexts/AuthContext';
 import { StarRating, QuickReview } from './Ratings';
-import { rateMovie, getUserRating, addQuickReview, logMovieView } from '../services/interactionService';
+import { rateMovie, getUserRating, addQuickReview, logMovieView, getMovieReviews } from '../services/interactionService';
+import type { Comment } from '../types/supabase';
+import { saveToMyList, removeFromMyList } from '../services/userMovieService';
+import { useUserMovieData } from '../hooks/useUserMovieData';
 
 interface MovieDetailsProps {
   movie: MovieDetailsType;
@@ -13,17 +16,36 @@ interface MovieDetailsProps {
 
 const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
   const { user } = useAuth();
+  const { inMyList, loading: dataLoading } = useUserMovieData(movie.id);
   const [userRating, setUserRating] = useState<number>(0);
   const [isRatingLoading, setIsRatingLoading] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [ratingSaved, setRatingSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [reviews, setReviews] = useState<Comment[]>([]);
+
+  // Carregar reviews iniciais
+  useEffect(() => {
+    if (movie?.id) {
+      loadReviews();
+    }
+  }, [movie?.id]);
+
+  const loadReviews = async () => {
+    try {
+      const { data } = await getMovieReviews(movie.id);
+      if (data) setReviews(data);
+    } catch (err) {
+      console.error('Falha ao carregar reviews', err);
+    }
+  };
 
   // Carregar rating do usuário ao abrir
   useEffect(() => {
     if (user && movie?.id) {
       loadUserRating();
-      // Log de visualização para ML
-      logMovieView(user.id, movie.id, { page: 'details' });
+      // Log de visualização para ML - fire and forget
+      logMovieView(user.id, movie.id, { page: 'details' }).catch(console.error);
     }
   }, [user, movie?.id]);
 
@@ -41,27 +63,45 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
       return;
     }
 
-    // Atualização otimista - mostra imediatamente
+    // Atualização otimista
     const previousRating = userRating;
     setUserRating(score);
     setIsRatingLoading(true);
-    setRatingSaved(true);
+    // Resetar estado de salvo para disparar animacao novamente se necessario
+    setRatingSaved(false);
 
-    const { error } = await rateMovie(user.id, movie.id, score, {
-      page: 'details',
-      rating_source: 'details'
-    });
+    try {
+      // Timeout para evitar UI travada
+      const timeoutPromise = new Promise<{ data: any, error?: Error }>((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout ao salvar avaliação')), 5000)
+      );
 
-    if (error) {
+      const ratePromise = rateMovie(user.id, movie.id, score, {
+        page: 'details',
+        rating_source: 'details'
+      });
+
+      const result = await Promise.race([ratePromise, timeoutPromise]);
+      const { error } = result as { error?: Error };
+
+      if (error) throw error;
+
+      setRatingSaved(true);
+      // Disparar evento global para atualizar cards na lista
+      window.dispatchEvent(new CustomEvent('ratingChanged', {
+        detail: { movieId: movie.id, rating: score }
+      }));
+
+      // Manter feedback por 3 segundos
+      setTimeout(() => setRatingSaved(false), 3000);
+    } catch (error) {
+      console.error('Erro ao salvar avaliação:', error);
       // Reverter em caso de erro
       setUserRating(previousRating);
-      setRatingSaved(false);
-      console.error('Erro ao salvar avaliação:', error);
-    } else {
-      // Manter feedback por 2 segundos
-      setTimeout(() => setRatingSaved(false), 2000);
+      alert('Não foi possível salvar sua avaliação. Verifique sua conexão.');
+    } finally {
+      setIsRatingLoading(false);
     }
-    setIsRatingLoading(false);
   };
 
   const handleQuickReviewSubmit = async (content: string) => {
@@ -69,19 +109,30 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
       throw new Error('Faça login para enviar reviews');
     }
 
+    // Evitar reviews vazios
+    if (!content.trim()) return;
+
     // Timeout de 10s para evitar travar a UI
     const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Timeout na conexão')), 10000)
+      setTimeout(() => reject(new Error('Tempo limite excedido. Verifique sua conexão.')), 10000)
     );
 
-    const submit = async () => {
-      const { error } = await addQuickReview(user.id, movie.id, content, {
-        page: 'details'
-      });
-      if (error) throw error;
-    }
+    try {
+      const submit = async () => {
+        const { error } = await addQuickReview(user.id, movie.id, content, {
+          page: 'details'
+        });
+        if (error) throw error;
+      }
 
-    await Promise.race([submit(), timeout]);
+      await Promise.race([submit(), timeout]);
+      loadReviews();
+      setShowReviewForm(false);
+    } catch (error) {
+      console.error('Erro ao enviar review:', error);
+      alert('Erro ao enviar comentário. Tente novamente.');
+      throw error; // Propagar para o componente filho destravar form
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -156,37 +207,39 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
     window.open(youtubeUrl, '_blank');
   };
 
-  const handleSaveMovie = () => {
+
+
+  const handleSaveMovie = async () => {
+    if (!user) {
+      alert('Faça login para salvar filmes na sua lista');
+      return;
+    }
+
+    setIsSaving(true);
     try {
-      const savedMovies = JSON.parse(localStorage.getItem('savedMovies') || '[]');
-      const isAlreadySaved = savedMovies.some((saved: any) => saved.id === movie.id);
+      const timeoutPromise = new Promise<{ success: boolean, error?: string }>((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout de conexão')), 5000)
+      );
 
-      if (!isAlreadySaved) {
-        savedMovies.push({
-          id: movie.id,
-          title: movie.title || 'Título não disponível',
-          poster_path: movie.poster_path || null,
-          vote_average: movie.vote_average || 0,
-          release_date: movie.release_date || '',
-          savedAt: new Date().toISOString(),
-          streaming_services: movie.streaming_services && movie.streaming_services !== 'N/A' ? movie.streaming_services : 'Não disponível',
-          director: movie.director && movie.director !== 'N/A' ? movie.director : 'Não informado',
-          genres: movie.genres && Array.isArray(movie.genres) ? movie.genres.map(g => g.name).join(', ') : 'Não informado',
-          overview: movie.overview || '',
-          userRating: userRating > 0 ? userRating : undefined
-        });
-        localStorage.setItem('savedMovies', JSON.stringify(savedMovies));
-
-        // Disparar evento customizado para atualizar outros componentes
-        window.dispatchEvent(new CustomEvent('savedMoviesChanged'));
-
-        alert('Filme salvo na sua lista!');
+      let actionPromise;
+      if (inMyList) {
+        actionPromise = removeFromMyList(user.id, movie.id);
       } else {
-        alert('Este filme já está na sua lista!');
+        actionPromise = saveToMyList(user.id, movie);
       }
+
+      const result = await Promise.race([actionPromise, timeoutPromise]) as { success: boolean, error?: string };
+
+      if (!result.success) {
+        throw new Error(result.error || 'Erro desconhecido');
+      }
+
+      // Feedback visual é tratado via hook useUserMovieData que ouve o evento
     } catch (error) {
-      console.error('Erro ao salvar filme:', error);
-      alert('Erro ao salvar filme. Tente novamente.');
+      console.error('Erro ao gerenciar lista:', error);
+      alert('Erro ao atualizar sua lista. Verifique sua conexão.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -304,12 +357,41 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
                   )}
                 </div>
 
+
+
+
                 {showReviewForm && user && (
                   <div className="mt-4 pt-4 border-t border-slate-600">
                     <QuickReview
                       onSubmit={handleQuickReviewSubmit}
                       placeholder="O que você achou desse filme?"
                     />
+                  </div>
+                )}
+
+                {/* Lista de Reviews */}
+                {reviews.length > 0 && (
+                  <div className="mt-6 border-t border-slate-600 pt-4">
+                    <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                      <MessageCircle size={16} />
+                      Comentários da Comunidade
+                    </h4>
+                    <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                      {reviews.map((review) => (
+                        <div key={review.id} className="bg-slate-800 p-3 rounded-lg text-sm">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">
+                              {review.user?.full_name?.[0] || 'U'}
+                            </div>
+                            <span className="text-slate-300 font-medium text-xs">
+                              {review.user?.full_name || 'Usuário'}
+                            </span>
+                            <span className="text-slate-600 text-xs">• {new Date(review.created_at).toLocaleDateString()}</span>
+                          </div>
+                          <p className="text-slate-300">{review.content}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
@@ -442,10 +524,23 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
                   </button>
                   <button
                     onClick={handleSaveMovie}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                    disabled={isSaving}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${inMyList
+                      ? 'bg-red-600 text-white hover:bg-red-700'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                      } ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    <Download size={16} />
-                    Salvar
+                    {inMyList ? (
+                      <>
+                        <X size={16} />
+                        Remover
+                      </>
+                    ) : (
+                      <>
+                        <Download size={16} />
+                        Salvar
+                      </>
+                    )}
                   </button>
                   <button
                     onClick={() => window.open(`https://www.themoviedb.org/movie/${safeMovie.id}`, '_blank')}

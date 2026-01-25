@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Star, Calendar, User, Play, Tv, Heart } from 'lucide-react';
 import { MovieDetails } from '../types/movie';
 import { getImageUrl } from '../services/tmdbApi';
 import { useAuth } from '../contexts/AuthContext';
 import { StarRating } from './Ratings';
-import { rateMovie, getUserRating } from '../services/interactionService';
+import { rateMovie } from '../services/interactionService';
+import { toggleFavorite } from '../services/userMovieService';
+import { useUserMovieData } from '../hooks/useUserMovieData';
 import type { SearchLoggingContext } from '../contexts/SearchContext';
 
 interface MovieCardProps {
@@ -23,41 +25,11 @@ const MovieCard: React.FC<MovieCardProps> = ({
   searchContext
 }) => {
   const { user } = useAuth();
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [userRating, setUserRating] = useState<number>(0);
   const [isRatingLoading, setIsRatingLoading] = useState(false);
   const [ratingSuccess, setRatingSuccess] = useState(false);
 
-  // Verificar se o filme está nos favoritos
-  useEffect(() => {
-    const savedMovies = JSON.parse(localStorage.getItem('savedMovies') || '[]');
-    const isMovieSaved = savedMovies.some((saved: any) => saved.id === movie.id);
-    setIsFavorite(isMovieSaved);
-  }, [movie.id]);
-
-  // Carregar rating do usuário
-  useEffect(() => {
-    const loadUserRating = async () => {
-      if (!user || !movie?.id) return;
-      const { data } = await getUserRating(user.id, movie.id);
-      if (data) {
-        setUserRating(data.score);
-      }
-    };
-    loadUserRating();
-  }, [user, movie?.id]);
-
-  // Escutar mudanças nos favoritos
-  useEffect(() => {
-    const handleSavedMoviesChange = () => {
-      const savedMovies = JSON.parse(localStorage.getItem('savedMovies') || '[]');
-      const isMovieSaved = savedMovies.some((saved: any) => saved.id === movie.id);
-      setIsFavorite(isMovieSaved);
-    };
-
-    window.addEventListener('savedMoviesChanged', handleSavedMoviesChange);
-    return () => window.removeEventListener('savedMoviesChanged', handleSavedMoviesChange);
-  }, [movie.id]);
+  // Usar o hook para obter dados do usuário sobre este filme
+  const { isLiked, rating } = useUserMovieData(movie.id);
 
   const handleRatingChange = async (score: 1 | 2 | 3 | 4 | 5) => {
     if (!user) return;
@@ -71,53 +43,39 @@ const MovieCard: React.FC<MovieCardProps> = ({
     });
 
     if (!error) {
-      setUserRating(score);
       setRatingSuccess(true);
       setTimeout(() => setRatingSuccess(false), 2000);
+
+      // Disparar evento para atualizar outros componentes
+      window.dispatchEvent(new CustomEvent('ratingChanged', {
+        detail: { movieId: movie.id, rating: score }
+      }));
     }
     setIsRatingLoading(false);
   };
 
-  const handleFavoriteClick = (e: React.MouseEvent) => {
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
     e.stopPropagation(); // Evita abrir o modal
 
+    if (!user) {
+      alert('Faça login para favoritar filmes');
+      return;
+    }
+
     try {
-      const savedMovies = JSON.parse(localStorage.getItem('savedMovies') || '[]');
+      const result = await toggleFavorite(user.id, movie.id);
 
-      if (isFavorite) {
-        // Remover dos favoritos
-        const updatedMovies = savedMovies.filter((saved: any) => saved.id !== movie.id);
-        localStorage.setItem('savedMovies', JSON.stringify(updatedMovies));
-        setIsFavorite(false);
+      if (result.error) {
+        alert(result.error);
       } else {
-        // Adicionar aos favoritos
-        const movieToSave = {
-          id: movie.id,
-          title: movie.title || 'Título não disponível',
-          poster_path: movie.poster_path || null,
-          vote_average: movie.vote_average || 0,
-          release_date: movie.release_date || '',
-          savedAt: new Date().toISOString(),
-          streaming_services: movie.streaming_services && movie.streaming_services !== 'N/A' ? movie.streaming_services : 'Não disponível',
-          director: movie.director && movie.director !== 'N/A' ? movie.director : 'Não informado',
-          genres: movie.genres && Array.isArray(movie.genres) ? movie.genres.map(g => g.name).join(', ') : 'Não informado',
-          overview: movie.overview || ''
-        };
-
-        savedMovies.push(movieToSave);
-        localStorage.setItem('savedMovies', JSON.stringify(savedMovies));
-        setIsFavorite(true);
-      }
-
-      // Disparar evento para atualizar outros componentes
-      window.dispatchEvent(new CustomEvent('savedMoviesChanged'));
-
-      // Callback opcional
-      if (onFavoriteToggle) {
-        onFavoriteToggle(movie);
+        // Callback opcional
+        if (onFavoriteToggle) {
+          onFavoriteToggle(movie);
+        }
       }
     } catch (error) {
       console.error('Erro ao gerenciar favorito:', error);
+      alert('Erro ao favoritar filme. Tente novamente.');
     }
   };
 
@@ -253,11 +211,11 @@ const MovieCard: React.FC<MovieCardProps> = ({
         <button
           onClick={handleFavoriteClick}
           className="absolute top-3 left-3 bg-black bg-opacity-75 rounded-full p-2 hover:bg-opacity-90 transition-all duration-200 group"
-          title={isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+          title={isLiked ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
         >
           <Heart
             size={16}
-            className={`transition-all duration-200 ${isFavorite
+            className={`transition-all duration-200 ${isLiked
               ? 'text-red-500 fill-red-500 scale-110'
               : 'text-white hover:text-red-400 group-hover:scale-110'
               }`}
@@ -359,7 +317,7 @@ const MovieCard: React.FC<MovieCardProps> = ({
           </div>
           <div className="mt-1">
             <StarRating
-              value={userRating}
+              value={rating || 0}
               onChange={handleRatingChange}
               size="sm"
               readonly={!user || isRatingLoading}

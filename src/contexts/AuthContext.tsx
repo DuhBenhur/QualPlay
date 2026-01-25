@@ -70,15 +70,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       console.log('Carregando perfil para usuário:', userId)
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
 
-      if (error && error.code !== 'PGRST116') {
-        throw error
+      // Timeout de 10 segundos para o perfil
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout ao carregar perfil')), 10000)
+      )
+
+      const fetchProfile = async () => {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single()
+
+        if (error && error.code !== 'PGRST116') {
+          throw error
+        }
+        return data;
       }
+
+      const data = await Promise.race([fetchProfile(), timeout]) as Profile | null
 
       if (data) {
         setProfile(data)
@@ -88,6 +99,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('Error loading profile:', error)
+      // Não bloquear a aplicação se o perfil falhar
+    } finally {
+      // Garantir que o loading termine
+      if (loading) setLoading(false)
     }
   }
 

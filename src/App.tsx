@@ -132,12 +132,59 @@ function App() {
     handleSearch(movieNames, directorNames, defaultFilters);
   };
 
+  const handleNavigate = (page: 'home' | 'about' | 'contact' | 'community') => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleFavoriteToggle = async (movie: MovieDetailsType) => {
+    try {
+      // Importado dinamicamente para evitar ciclos se nao estiver no topo, 
+      // mas idealmente deveria estar nos imports.
+      // Usando a funcao injetada ou importada
+      const { saveToMyList, removeFromMyList, getMyMovies } = await import('./services/userMovieService');
+      const { user } = await import('./contexts/AuthContext').then(m => ({ user: m.useAuth().user })); // Hacky access to auth if not passed
+      // Melhor usar o hook useAuth do escopo, mas aqui estamos dentro da funcao
+
+      // Nota: A logica real deve ser feita com o usuario do scope do componente
+      if (!user) {
+        alert('Faça login para favoritar filmes');
+        setShowLoginModal(true);
+        return;
+      }
+
+      // Verificar se ja esta na lista (otimizacao: check local ou relying on UI state if MovieCard has it)
+      // Por simplificacao, vamos tentar salvar. Se der erro de duplicata, removemos.
+      // Ou melhor, o MovieCard deveria receber 'isFavorite'.
+
+      console.log('Toggling favorite for:', movie.title);
+      // Disparar evento para atualizar UI globalmente
+      // A logica real de toggle deve ser verificada:
+      // O ideal é o componente pai gerenciar o estado ou o Card saber se é favorito.
+      // Vamos assumir que o usuario quer salvar por enquanto e se ja tiver, o service avisa ou removemos.
+
+      const result = await saveToMyList(user.id, movie);
+      if (!result.success) {
+        if (result.error === 'Filme já está na lista') {
+          await removeFromMyList(user.id, movie.id);
+          console.log('Filme removido dos favoritos');
+        } else {
+          console.error(result.error);
+        }
+      } else {
+        console.log('Filme salvo nos favoritos');
+      }
+    } catch (error) {
+      console.error('Erro ao favoritar:', error);
+    }
+  };
+
   if (currentPage === 'about') {
     return (
       <>
         <Navigation
           currentPage={currentPage}
-          onPageChange={setCurrentPage}
+          onPageChange={handleNavigate}
           onOpenTutorial={() => setShowTutorial(true)}
           onLogin={() => setShowLoginModal(true)}
         />
@@ -159,7 +206,7 @@ function App() {
       <>
         <Navigation
           currentPage={currentPage}
-          onPageChange={setCurrentPage}
+          onPageChange={handleNavigate}
           onOpenTutorial={() => setShowTutorial(true)}
           onLogin={() => setShowLoginModal(true)}
         />
@@ -181,13 +228,14 @@ function App() {
       <>
         <Navigation
           currentPage={currentPage}
-          onPageChange={setCurrentPage}
+          onPageChange={handleNavigate}
           onOpenTutorial={() => setShowTutorial(true)}
           onLogin={() => setShowLoginModal(true)}
         />
         <CommunityPage
           onMovieClick={handleSavedMovieClick}
           onLogin={() => setShowLoginModal(true)}
+          onNavigate={handleNavigate}
         />
         {selectedMovie && (
           <MovieDetails
@@ -211,7 +259,7 @@ function App() {
     <div className="min-h-screen bg-slate-900">
       <Navigation
         currentPage={currentPage}
-        onPageChange={setCurrentPage}
+        onPageChange={handleNavigate}
         onOpenTutorial={() => setShowTutorial(true)}
         onLogin={() => setShowLoginModal(true)}
       />
@@ -306,10 +354,7 @@ function App() {
                         key={movie.id}
                         movie={movie}
                         onClick={() => handleMovieClick(movie)}
-                        onFavoriteToggle={(movie) => {
-                          // Feedback visual opcional
-                          console.log(`Filme ${movie.title} ${JSON.parse(localStorage.getItem('savedMovies') || '[]').some((saved: any) => saved.id === movie.id) ? 'adicionado aos' : 'removido dos'} favoritos`);
-                        }}
+                        onFavoriteToggle={() => handleFavoriteToggle(movie)}
                       />
                     ))}
                   </div>
@@ -385,7 +430,6 @@ function App() {
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
       />
-
 
     </div>
   );

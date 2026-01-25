@@ -7,7 +7,7 @@
 import React, { useEffect, useState } from 'react'
 import {
     Users, TrendingUp, Star, MessageCircle, Film,
-    Activity, Award, Sparkles, ArrowRight, RefreshCw, Eye, EyeOff
+    Activity, Award, Sparkles, ArrowRight, RefreshCw, Eye, EyeOff, X
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import CommunityFeed from './Community/CommunityFeed'
@@ -40,9 +40,10 @@ interface TrendingMovie {
 interface CommunityPageProps {
     onMovieClick: (movieId: number) => void
     onLogin?: () => void
+    onNavigate?: (page: 'home' | 'about' | 'contact' | 'community') => void
 }
 
-const CommunityPage: React.FC<CommunityPageProps> = ({ onMovieClick, onLogin }) => {
+const CommunityPage: React.FC<CommunityPageProps> = ({ onMovieClick, onLogin, onNavigate }) => {
     const { user } = useAuth()
     const [stats, setStats] = useState<CommunityStats>({
         totalRatings: 0,
@@ -57,31 +58,62 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onMovieClick, onLogin }) 
     const [showAllBadges, setShowAllBadges] = useState(false)
 
     useEffect(() => {
-        loadCommunityData()
-    }, [])
+        const init = async () => {
+            await loadCommunityData()
+            // Carregar gamificação apenas depois do feed principal, se tiver usuário
+            if (user) {
+                setTimeout(() => loadUserGamification(), 1000)
+            }
+        }
+        init()
 
-    useEffect(() => {
-        if (user) {
+        // Realtime updates listener
+        const handleGamificationUpdate = () => {
+            console.log('[CommunityPage] Gamification update received, refreshing...')
             loadUserGamification()
         }
-    }, [user])
+
+        window.addEventListener('gamificationUpdated', handleGamificationUpdate)
+
+        return () => {
+            window.removeEventListener('gamificationUpdated', handleGamificationUpdate)
+        }
+    }, [user]) // Re-run if user changes (login/logout)
+
 
     const loadCommunityData = async () => {
         setLoading(true)
-        await Promise.all([
-            loadStats(),
-            loadTrendingMovies()
-        ])
-        setLoading(false)
+        try {
+            // Executar em sequência em vez de paralelo para aliviar a rede
+            await loadStats()
+            await loadTrendingMovies()
+        } catch (e) {
+            console.error(e)
+        } finally {
+            setLoading(false)
+        }
     }
 
     const loadUserGamification = async () => {
         if (!user) return
-        let gamification = await getUserGamification(user.id)
-        if (!gamification) {
-            gamification = await initializeUserGamification(user.id)
+        try {
+            // First try to get current state
+            let gamification = await getUserGamification(user.id)
+            if (!gamification) {
+                gamification = await initializeUserGamification(user.id)
+            }
+
+            // Trigger background sync to fix retroactive badges
+            // This runs without blocking the UI
+            const { syncUserGamification } = await import('../services/gamificationService')
+            syncUserGamification(user.id).then(updated => {
+                if (updated) setUserGamification(updated)
+            })
+
+            setUserGamification(gamification)
+        } catch (error) {
+            console.error('Erro ao carregar gamificação:', error)
         }
-        setUserGamification(gamification)
     }
 
     const handleToggleProfileVisibility = async () => {
@@ -113,9 +145,9 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onMovieClick, onLogin }) 
         }
 
         try {
-            // Timeout de 2 segundos para evitar loading infinito
+            // Timeout de 15 segundos para evitar erros em conexões lentas
             const timeout = new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error('Timeout')), 2000)
+                setTimeout(() => reject(new Error('Timeout ao carregar estatísticas')), 15000)
             )
 
             const fetchData = async () => {
@@ -172,9 +204,9 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onMovieClick, onLogin }) 
         }
 
         try {
-            // Timeout de 3 segundos
+            // Timeout de 15 segundos
             const timeout = new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error('Timeout')), 3000)
+                setTimeout(() => reject(new Error('Timeout ao carregar filmes em alta')), 15000)
             )
 
             const fetchTrending = async () => {
@@ -339,7 +371,7 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onMovieClick, onLogin }) 
             {/* User Statistics - Only for logged in users */}
             {user && (
                 <div className="max-w-7xl mx-auto px-6 mt-8">
-                    <UserMovieStats />
+                    <UserMovieStats onNavigate={onNavigate} />
                 </div>
             )}
 
@@ -454,7 +486,7 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onMovieClick, onLogin }) 
                                     longestStreak={userGamification.longest_streak}
                                 />
 
-                                {/* Badges Preview */}
+                                {/* Badges Preview with Modal Trigger */}
                                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">
                                     <div className="flex items-center justify-between mb-4">
                                         <h3 className="text-white font-bold flex items-center gap-2">
@@ -462,18 +494,50 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onMovieClick, onLogin }) 
                                             Suas Conquistas
                                         </h3>
                                         <button
-                                            onClick={() => setShowAllBadges(!showAllBadges)}
+                                            onClick={() => setShowAllBadges(true)}
                                             className="text-blue-400 text-sm hover:underline"
                                         >
-                                            {showAllBadges ? 'Ver menos' : 'Ver todas'}
+                                            Ver todas
                                         </button>
                                     </div>
                                     <UserBadges
                                         earnedBadges={userGamification.badges_earned || []}
-                                        showLocked={showAllBadges}
-                                        compact={!showAllBadges}
+                                        showLocked={false}
+                                        compact={true}
                                     />
                                 </div>
+
+                                {/* Badges Modal */}
+                                {showAllBadges && (
+                                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                                        <div className="relative w-full max-w-4xl bg-slate-900 rounded-3xl border border-slate-700 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 p-8 max-h-[90vh] overflow-y-auto">
+
+                                            {/* Close Button */}
+                                            <button
+                                                onClick={() => setShowAllBadges(false)}
+                                                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white bg-slate-800/50 rounded-full hover:bg-slate-700 transition-colors"
+                                            >
+                                                <X size={24} />
+                                            </button>
+
+                                            <div className="text-center mb-8">
+                                                <div className="inline-flex items-center justify-center p-3 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-2xl mb-4">
+                                                    <Award className="text-yellow-400" size={32} />
+                                                </div>
+                                                <h2 className="text-3xl font-bold text-white mb-2">Galeria de Conquistas</h2>
+                                                <p className="text-slate-400 max-w-md mx-auto">
+                                                    Colecione todas as badges avaliando filmes, escrevendo reviews e participando da comunidade!
+                                                </p>
+                                            </div>
+
+                                            <UserBadges
+                                                earnedBadges={userGamification.badges_earned || []}
+                                                showLocked={true}
+                                                compact={false}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Profile Visibility Toggle */}
                                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-4">

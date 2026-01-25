@@ -1,19 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart3, Clock, Film, Star, Award, Calendar, Check, Search, TrendingUp } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { UserMovieService } from '../services/userMovieService';
-
-interface UserStats {
-  totalMovies: number;
-  watchedMovies: number;
-  averageRating: number;
-  favoriteGenres: string[];
-  watchTime: number;
-}
+import { getUserStats, type UserStats } from '../services/userMovieService';
 
 const MINIMUM_RATINGS = 5;
 
-const UserMovieStats: React.FC = () => {
+interface UserMovieStatsProps {
+  onNavigate?: (page: 'home' | 'about' | 'contact' | 'community') => void;
+}
+
+const UserMovieStats: React.FC<UserMovieStatsProps> = ({ onNavigate }) => {
   const { user } = useAuth();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,8 +30,8 @@ const UserMovieStats: React.FC = () => {
         );
 
         const fetchData = async () => {
-          const { data, error } = await UserMovieService.getUserStats();
-          if (error) throw error;
+          const { data, error } = await getUserStats(user.id);
+          if (error) throw new Error(error);
           return data;
         };
 
@@ -132,8 +128,11 @@ const UserMovieStats: React.FC = () => {
           {/* CTA */}
           <button
             onClick={() => {
-              // Scroll to top para ir para busca
-              window.scrollTo({ top: 0, behavior: 'smooth' })
+              if (onNavigate) {
+                onNavigate('home');
+              } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
             }}
             className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg shadow-blue-500/25 font-medium"
           >

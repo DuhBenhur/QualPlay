@@ -29,9 +29,9 @@ const CommunityFeed: React.FC<CommunityFeedProps> = ({ onMovieClick, limit = 20 
         setError(null)
 
         try {
-            // Timeout de 3 segundos
+            // Timeout de 15 segundos
             const timeout = new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error('Timeout')), 3000)
+                setTimeout(() => reject(new Error('Tempo limite excedido ao carregar o feed')), 15000)
             )
 
             const fetchFeed = async () => {
@@ -72,10 +72,9 @@ const CommunityFeed: React.FC<CommunityFeedProps> = ({ onMovieClick, limit = 20 
             }))
 
             setMovieData(movieInfo)
-        } catch (err) {
+        } catch (err: any) {
             console.error('Erro ao carregar feed:', err)
-            setError('Não foi possível carregar o feed. Tente novamente.')
-            // Se der erro, pelo menos limpa o loading
+            setError(err.message || 'Não foi possível carregar o feed. Verifique sua conexão.')
         } finally {
             setLoading(false)
         }

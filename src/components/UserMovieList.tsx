@@ -1,19 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { List, Filter, Check, Eye, Clock3, EyeOff, Star, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { UserMovieService } from '../services/userMovieService';
+
+
+import { getMyMovies, removeFromMyList } from '../services/userMovieService';
 import { getImageUrl } from '../services/tmdbApi';
 
-interface UserMovie {
-  id: string;
-  movie_id: number;
-  movie_title: string;
-  movie_poster: string | null;
-  status: 'watched' | 'want_to_watch' | 'watching' | 'dropped';
-  rating: number | null;
-  watched_at: string | null;
-  created_at: string;
-}
+// ... interface UserMovie (mantendo, mas mapeando dados)
 
 interface UserMovieListProps {
   onMovieClick: (movieId: number) => void;
@@ -21,7 +14,7 @@ interface UserMovieListProps {
 
 const UserMovieList: React.FC<UserMovieListProps> = ({ onMovieClick }) => {
   const { user } = useAuth();
-  const [movies, setMovies] = useState<UserMovie[]>([]);
+  const [movies, setMovies] = useState<any[]>([]); // Usando any por enquanto para compatibilidade com dados retornados
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [expandedMovie, setExpandedMovie] = useState<string | null>(null);
@@ -33,21 +26,38 @@ const UserMovieList: React.FC<UserMovieListProps> = ({ onMovieClick }) => {
         setLoading(false);
         return;
       }
-      
-      if (!user) {
-        setLoading(false);
-        return;
-      }
 
       try {
-        const { data, error } = await UserMovieService.getUserMovies(
-          statusFilter as 'watched' | 'want_to_watch' | 'watching' | 'dropped' | undefined
-        );
-        
-        if (error) throw error;
-        setMovies(data);
+        // Criar um timeout para não ficar carregando infinitamente
+        const timeoutPromise = new Promise<{ data: any[], error?: string }>((_, reject) => {
+          setTimeout(() => reject(new Error('Timeout de conexão')), 5000);
+        });
+
+        const fetchPromise = getMyMovies(user.id);
+
+        // getMyMovies retorna { data, error }
+        const result = await Promise.race([fetchPromise, timeoutPromise]) as { data: any[], error?: string };
+        const { data, error } = result;
+
+        if (error) throw new Error(error);
+
+        // Mapear para o formato esperado pelo componente
+        const adaptedMovies = (data || []).map(m => ({
+          id: m.id,
+          movie_id: m.movie_id,
+          movie_title: m.movie_title,
+          movie_poster: m.movie_poster,
+          status: 'want_to_watch', // Default para itens da lista
+          rating: m.userRating || null,
+          watched_at: null,
+          created_at: m.added_at
+        }));
+
+        setMovies(adaptedMovies);
       } catch (error) {
         console.error('Error fetching user movies:', error);
+        // Em caso de erro/timeout, paramos o loading para mostrar estado vazio ou erro
+        setMovies([]);
       } finally {
         setLoading(false);
       }
@@ -59,12 +69,12 @@ const UserMovieList: React.FC<UserMovieListProps> = ({ onMovieClick }) => {
   // Se não houver usuário, não renderize nada
   const handleRemoveMovie = async (e: React.MouseEvent, movieId: number) => {
     e.stopPropagation();
-    
+
     if (confirm('Tem certeza que deseja remover este filme da sua lista?')) {
       try {
-        const { error } = await UserMovieService.removeUserMovie(movieId);
-        if (error) throw error;
-        
+        const { error } = await removeFromMyList(user!.id, movieId);
+        if (error) throw new Error(error);
+
         setMovies(movies.filter(m => m.movie_id !== movieId));
       } catch (error) {
         console.error('Error removing movie:', error);
@@ -163,47 +173,43 @@ const UserMovieList: React.FC<UserMovieListProps> = ({ onMovieClick }) => {
             Sua Lista de Filmes
           </h3>
         </div>
-        
+
         <div className="flex gap-2">
           <button
             onClick={() => setStatusFilter(null)}
-            className={`px-3 py-1 rounded-md text-sm transition-colors ${
-              statusFilter === null
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
+            className={`px-3 py-1 rounded-md text-sm transition-colors ${statusFilter === null
+              ? 'bg-blue-600 text-white'
+              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
           >
             Todos
           </button>
           <button
             onClick={() => setStatusFilter('watched')}
-            className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm transition-colors ${
-              statusFilter === 'watched'
-                ? 'bg-green-600 text-white'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
+            className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm transition-colors ${statusFilter === 'watched'
+              ? 'bg-green-600 text-white'
+              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
           >
             <Check size={14} />
             <span className="hidden md:inline">Assistidos</span>
           </button>
           <button
             onClick={() => setStatusFilter('want_to_watch')}
-            className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm transition-colors ${
-              statusFilter === 'want_to_watch'
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
+            className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm transition-colors ${statusFilter === 'want_to_watch'
+              ? 'bg-blue-600 text-white'
+              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
           >
             <Eye size={14} />
             <span className="hidden md:inline">Quero Assistir</span>
           </button>
           <button
             onClick={() => setStatusFilter('watching')}
-            className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm transition-colors ${
-              statusFilter === 'watching'
-                ? 'bg-yellow-600 text-white'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
+            className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm transition-colors ${statusFilter === 'watching'
+              ? 'bg-yellow-600 text-white'
+              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
           >
             <Clock3 size={14} />
             <span className="hidden md:inline">Assistindo</span>
@@ -213,11 +219,11 @@ const UserMovieList: React.FC<UserMovieListProps> = ({ onMovieClick }) => {
 
       <div className="space-y-3">
         {movies.map((movie) => (
-          <div 
+          <div
             key={movie.id}
             className="bg-slate-700 rounded-lg overflow-hidden hover:bg-slate-600 transition-colors"
           >
-            <div 
+            <div
               className="flex items-center cursor-pointer p-3"
               onClick={() => onMovieClick(movie.movie_id)}
             >
@@ -229,7 +235,7 @@ const UserMovieList: React.FC<UserMovieListProps> = ({ onMovieClick }) => {
                   e.currentTarget.src = '/placeholder-movie.jpg';
                 }}
               />
-              
+
               <div className="ml-3 flex-1">
                 <div className="flex items-start justify-between">
                   <div>
@@ -244,7 +250,7 @@ const UserMovieList: React.FC<UserMovieListProps> = ({ onMovieClick }) => {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     {movie.rating && (
                       <div className="flex items-center gap-1 bg-yellow-500/20 px-2 py-1 rounded">
@@ -252,7 +258,7 @@ const UserMovieList: React.FC<UserMovieListProps> = ({ onMovieClick }) => {
                         <span className="text-white text-sm font-medium">{movie.rating}</span>
                       </div>
                     )}
-                    
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -266,7 +272,7 @@ const UserMovieList: React.FC<UserMovieListProps> = ({ onMovieClick }) => {
                         <ChevronDown size={18} />
                       )}
                     </button>
-                    
+
                     <button
                       onClick={(e) => handleRemoveMovie(e, movie.movie_id)}
                       className="p-1 text-slate-400 hover:text-red-500 transition-colors"
@@ -277,7 +283,7 @@ const UserMovieList: React.FC<UserMovieListProps> = ({ onMovieClick }) => {
                 </div>
               </div>
             </div>
-            
+
             {/* Expanded Details */}
             {expandedMovie === movie.id && (
               <div className="p-3 pt-0 border-t border-slate-600">
@@ -289,19 +295,19 @@ const UserMovieList: React.FC<UserMovieListProps> = ({ onMovieClick }) => {
                       <span className="text-white">{getStatusText(movie.status)}</span>
                     </div>
                   </div>
-                  
+
                   <div className="bg-slate-600 rounded p-2">
                     <span className="text-slate-400">Adicionado em:</span>
                     <div className="text-white mt-1">{formatDate(movie.created_at)}</div>
                   </div>
-                  
+
                   {movie.watched_at && (
                     <div className="bg-slate-600 rounded p-2">
                       <span className="text-slate-400">Assistido em:</span>
                       <div className="text-white mt-1">{formatDate(movie.watched_at)}</div>
                     </div>
                   )}
-                  
+
                   {movie.rating && (
                     <div className="bg-slate-600 rounded p-2">
                       <span className="text-slate-400">Sua avaliação:</span>
@@ -312,7 +318,7 @@ const UserMovieList: React.FC<UserMovieListProps> = ({ onMovieClick }) => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="mt-3 flex justify-end">
                   <button
                     onClick={() => onMovieClick(movie.movie_id)}

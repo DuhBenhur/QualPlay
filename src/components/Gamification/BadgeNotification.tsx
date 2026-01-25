@@ -4,7 +4,8 @@
 
 import React, { useEffect, useState } from 'react'
 import { X, Award, Sparkles } from 'lucide-react'
-import { Badge, getBadgeById, getBadgeTierColor } from '../../services/gamificationService'
+import { getBadgeById } from '../../services/gamificationService'
+import { Badge, getBadgeTierColor } from '../../constants/gamification'
 
 interface BadgeNotificationProps {
     badgeIds: string[]

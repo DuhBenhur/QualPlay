@@ -4,7 +4,8 @@
 
 import React from 'react'
 import { TrendingUp, Star } from 'lucide-react'
-import { getLevelFromPoints, getProgressToNextLevel, LEVELS } from '../../services/gamificationService'
+import { getLevelFromPoints, getProgressToNextLevel } from '../../services/gamificationService'
+import { LEVELS } from '../../constants/gamification'
 
 interface UserLevelProps {
     points: number
