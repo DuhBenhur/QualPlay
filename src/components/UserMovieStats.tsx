@@ -249,13 +249,13 @@ const UserMovieStats: React.FC<UserMovieStatsProps> = ({ onNavigate }) => {
             <p>• Seu gênero favorito é <strong>{stats.favoriteGenres[0]}</strong>.</p>
           )}
 
-          {/* Avaliação média - com emoji baseado na nota */}
+          {/* Avaliação média - com emoji baseado na nota - CORRIGIDO PARA /5 */}
           {stats.averageRating > 0 && (
             <p>
-              • Média de notas: <strong>{stats.averageRating.toFixed(1)}/10</strong>
-              {stats.averageRating >= 8 && ' ⭐ Você é exigente!'}
-              {stats.averageRating < 8 && stats.averageRating >= 6 && ' 👍 Gosta de variedade!'}
-              {stats.averageRating < 6 && ' 🤔 Um crítico honesto!'}
+              • Média de notas: <strong>{stats.averageRating.toFixed(1)}/5</strong>
+              {stats.averageRating >= 4 && ' ⭐ Você é exigente!'}
+              {stats.averageRating < 4 && stats.averageRating >= 3 && ' 👍 Gosta de variedade!'}
+              {stats.averageRating < 3 && ' 🤔 Um crítico honesto!'}
             </p>
           )}
 
