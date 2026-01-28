@@ -50,7 +50,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
   // Busca instantânea com Enter
   const handleInstantSearch = (term: string, type: 'movie' | 'director') => {
     if (!term.trim()) return;
-    
+
     const filters: SearchFilters = {
       genres: selectedGenres,
       yearStart,
@@ -90,7 +90,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
   // Manipulação de teclas
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, type: 'movie' | 'director') => {
     const value = type === 'movie' ? movieInput.trim() : directorInput.trim();
-    
+
     if (e.key === 'Enter') {
       e.preventDefault();
       if (value) {
@@ -123,8 +123,8 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
   };
 
   const handleGenreToggle = (genreId: number) => {
-    setSelectedGenres(prev => 
-      prev.includes(genreId) 
+    setSelectedGenres(prev =>
+      prev.includes(genreId)
         ? prev.filter(id => id !== genreId)
         : [...prev, genreId]
     );
@@ -169,9 +169,9 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
       {/* Header Compacto */}
       <div className="p-3 md:p-4 border-b border-slate-700 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <img 
-            src="/seu_logo.png" 
-            alt="Eduardo Ben-Hur Logo" 
+          <img
+            src="/seu_logo.png"
+            alt="Eduardo Ben-Hur Logo"
             className="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover"
             onError={(e) => {
               e.currentTarget.style.display = 'none';
@@ -187,10 +187,10 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
       {/* Conteúdo Principal - Scrollable */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-3 md:p-4 space-y-4">
-          
+
           <div className="space-y-4">
             <h2 className="text-base md:text-lg font-semibold text-white">Busca Básica</h2>
-            
+
             {/* Movie Input */}
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -207,13 +207,13 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
                 />
                 <button
                   onClick={addMovie}
-                  className="px-3 py-2 md:py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="min-h-[44px] px-3 py-2 md:py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                   title="Adicionar à lista para busca combinada"
                 >
                   <Plus size={16} />
                 </button>
               </div>
-              
+
               {movieNames.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {movieNames.map((name, index) => (
@@ -250,13 +250,13 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
                 />
                 <button
                   onClick={addDirector}
-                  className="px-3 py-2 md:py-3 bg-amber-600 text-white rounded-md hover:bg-amber-700 transition-colors"
+                  className="min-h-[44px] px-3 py-2 md:py-3 bg-amber-600 text-white rounded-md hover:bg-amber-700 transition-colors"
                   title="Adicionar à lista para busca combinada"
                 >
                   <Plus size={16} />
                 </button>
               </div>
-              
+
               {directorNames.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {directorNames.map((name, index) => (
@@ -382,7 +382,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
           <button
             onClick={handleCombinedSearch}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 md:py-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-base md:text-lg"
+            className="w-full min-h-[44px] flex items-center justify-center gap-2 px-4 py-3 md:py-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-base md:text-lg"
           >
             <Search size={20} />
             {isLoading ? 'Buscando...' : `Busca Combinada (${movieNames.length + directorNames.length} itens)`}
@@ -419,7 +419,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
             }
           }}
           disabled={isLoading}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 md:py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-base md:text-lg"
+          className="w-full min-h-[44px] flex items-center justify-center gap-2 px-4 py-3 md:py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-base md:text-lg"
         >
           <Search size={20} />
           {isLoading ? 'Buscando...' : 'Descobrir Filmes'}
@@ -431,12 +431,12 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ onSearch, onFilesProcesse
         >
           Nova Busca (Limpar Tudo)
         </button>
-        
+
         {/* Dica para Tutorial - Só aparece se nunca viu */}
         {!localStorage.getItem('hasSeenTutorial') && (
           <div className="p-3 bg-gradient-to-r from-indigo-900/50 to-purple-900/50 rounded-lg border border-indigo-500/30 text-center">
             <p className="text-indigo-200 text-sm">
-              <strong>🎯 Primeira vez aqui?</strong><br/>
+              <strong>🎯 Primeira vez aqui?</strong><br />
               Clique no botão "Tutorial" para aprender todas as funcionalidades!
             </p>
           </div>

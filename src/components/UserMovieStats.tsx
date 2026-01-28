@@ -234,14 +234,36 @@ const UserMovieStats: React.FC<UserMovieStatsProps> = ({ onNavigate }) => {
       <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-lg p-4 border border-blue-500/20">
         <h4 className="text-white font-medium mb-3">🎯 Insights Personalizados</h4>
         <div className="text-slate-300 text-sm space-y-2">
-          <p>• Você já assistiu <strong>{stats.watchedMovies}</strong> filmes, o que representa <strong>{Math.round((stats.watchedMovies / stats.totalMovies) * 100)}%</strong> da sua lista.</p>
-          <p>• Seu gênero favorito é <strong>{stats.favoriteGenres[0]}</strong>, com <strong>{Math.round((stats.favoriteGenres.length > 0 ? 1 : 0) / stats.totalMovies * 100)}%</strong> dos filmes.</p>
-          <p>• Você já passou aproximadamente <strong>{formatWatchTime(stats.watchTime)}</strong> assistindo filmes!</p>
-          {stats.averageRating > 7 && (
-            <p>• Você é um avaliador <strong>exigente</strong>, com média de notas <strong>{stats.averageRating.toFixed(1)}</strong>.</p>
+          {/* Total de filmes assistidos */}
+          {stats.watchedMovies > 0 && (
+            <p>• Você já assistiu <strong>{stats.watchedMovies}</strong> {stats.watchedMovies === 1 ? 'filme' : 'filmes'}!</p>
           )}
-          {stats.averageRating <= 7 && (
-            <p>• Você é um avaliador <strong>moderado</strong>, com média de notas <strong>{stats.averageRating.toFixed(1)}</strong>.</p>
+
+          {/* Tempo assistido - só mostrar se > 0 */}
+          {stats.watchTime > 0 && (
+            <p>• Você já passou aproximadamente <strong>{formatWatchTime(stats.watchTime)}</strong> assistindo filmes!</p>
+          )}
+
+          {/* Gênero favorito - só se tiver pelo menos 3 filmes */}
+          {stats.favoriteGenres.length > 0 && stats.watchedMovies >= 3 && (
+            <p>• Seu gênero favorito é <strong>{stats.favoriteGenres[0]}</strong>.</p>
+          )}
+
+          {/* Avaliação média - com emoji baseado na nota */}
+          {stats.averageRating > 0 && (
+            <p>
+              • Média de notas: <strong>{stats.averageRating.toFixed(1)}/10</strong>
+              {stats.averageRating >= 8 && ' ⭐ Você é exigente!'}
+              {stats.averageRating < 8 && stats.averageRating >= 6 && ' 👍 Gosta de variedade!'}
+              {stats.averageRating < 6 && ' 🤔 Um crítico honesto!'}
+            </p>
+          )}
+
+          {/* Call to action se tiver poucos filmes */}
+          {stats.watchedMovies < 5 && (
+            <p className="text-indigo-300">
+              • 💡 <strong>Dica:</strong> Avalie mais {5 - stats.watchedMovies} {5 - stats.watchedMovies === 1 ? 'filme' : 'filmes'} para desbloquear estatísticas detalhadas!
+            </p>
           )}
         </div>
       </div>
