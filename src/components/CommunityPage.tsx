@@ -510,7 +510,7 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onMovieClick, onLogin, on
                                 {/* Badges Modal */}
                                 {showAllBadges && (
                                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                                        <div className="relative w-full max-w-4xl bg-slate-900 rounded-3xl border border-slate-700 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 p-8 max-h-[90vh] overflow-y-auto">
+                                        <div className="relative w-full max-w-4xl bg-slate-900 rounded-3xl border border-slate-700 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 p-4 sm:p-6 md:p-8 max-h-[90vh] overflow-y-auto">
 
                                             {/* Close Button */}
                                             <button
@@ -567,7 +567,7 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onMovieClick, onLogin, on
                         )}
 
                         {/* Leaderboard */}
-                        <Leaderboard limit={5} />
+                        <Leaderboard limit={5} onNavigate={onNavigate} />
 
                         {/* Tips */}
                         <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">

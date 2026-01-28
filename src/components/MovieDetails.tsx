@@ -73,7 +73,7 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, onClose }) => {
     try {
       // Timeout para evitar UI travada
       const timeoutPromise = new Promise<{ data: any, error?: Error }>((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout ao salvar avaliação')), 5000)
+        setTimeout(() => reject(new Error('Timeout ao salvar avaliação')), 10000)
       );
 
       const ratePromise = rateMovie(user.id, movie.id, score, {

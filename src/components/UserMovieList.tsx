@@ -30,7 +30,7 @@ const UserMovieList: React.FC<UserMovieListProps> = ({ onMovieClick }) => {
       try {
         // Criar um timeout para não ficar carregando infinitamente
         const timeoutPromise = new Promise<{ data: any[], error?: string }>((_, reject) => {
-          setTimeout(() => reject(new Error('Timeout de conexão')), 5000);
+          setTimeout(() => reject(new Error('Timeout de conexão')), 10000);
         });
 
         const fetchPromise = getMyMovies(user.id);

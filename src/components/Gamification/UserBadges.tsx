@@ -151,9 +151,9 @@ const UserBadges: React.FC<UserBadgesProps> = ({
                                                 )}
                                             </div>
 
-                                            <div className="flex-1 min-w-0 pt-0.5">
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <h5 className={`font-bold truncate ${isEarned ? 'text-white' : 'text-slate-500'}`}>
+                                            <div className="flex-1 pt-0.5">
+                                                <div className="flex items-center justify-between mb-1 gap-2">
+                                                    <h5 className={`font-bold ${isEarned ? 'text-white' : 'text-slate-500'}`}>
                                                         {badge.name}
                                                     </h5>
                                                     {isEarned && (

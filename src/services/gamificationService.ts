@@ -206,6 +206,70 @@ export async function addPoints(
     }
 }
 
+/**
+ * Atualiza o streak do usuário baseado na última atividade
+ * Deve ser chamado em qualquer ação do usuário (rating, like, review, view)
+ * Não adiciona pontos, apenas atualiza a sequência de dias
+ */
+export async function updateDailyStreak(userId: string): Promise<void> {
+    if (!supabase || !userId) return
+
+    try {
+        let gamification = await getUserGamification(userId)
+        if (!gamification) {
+            gamification = await initializeUserGamification(userId)
+        }
+        if (!gamification) return
+
+        const today = new Date().toISOString().split('T')[0]
+        const lastActivity = gamification.last_activity_date
+
+        // Se já atualizamos hoje, não fazer nada
+        if (lastActivity === today) {
+            return
+        }
+
+        let newStreak = gamification.current_streak
+        if (lastActivity) {
+            const lastDate = new Date(lastActivity)
+            const todayDate = new Date(today)
+            const diffDays = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24))
+
+            if (diffDays === 1) {
+                newStreak += 1
+            } else if (diffDays > 1) {
+                newStreak = 1
+            }
+        } else {
+            newStreak = 1
+        }
+
+        const longestStreak = Math.max(gamification.longest_streak, newStreak)
+
+        // Atualizar apenas streak e data, SEM adicionar pontos
+        await supabase
+            .from('user_gamification')
+            .update({
+                current_streak: newStreak,
+                longest_streak: longestStreak,
+                last_activity_date: today,
+                updated_at: new Date().toISOString(),
+            })
+            .eq('user_id', userId)
+
+        console.log(`[Gamification] Daily streak updated: ${newStreak} days for user ${userId}`)
+
+        // Disparar evento para atualizar UI
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('gamificationUpdated', {
+                detail: { streakUpdated: true, newStreak }
+            }))
+        }
+    } catch (error) {
+        console.error('[Gamification] Error updating daily streak:', error)
+    }
+}
+
 async function checkAndAwardBadges(userId: string, gamification: UserGamification): Promise<string[]> {
     if (!supabase) return []
 
@@ -429,11 +493,13 @@ export async function syncUserGamification(userId: string): Promise<UserGamifica
 // EXPORTS
 // ============================================================================
 
+
 export const GamificationService = {
     getUserGamification,
     initializeUserGamification,
     addPoints,
-    syncUserGamification, // Added here
+    updateDailyStreak,
+    syncUserGamification,
     updateProfileVisibility,
     getLeaderboard,
     getLevelFromPoints,

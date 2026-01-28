@@ -6,6 +6,7 @@
 // ============================================================================
 
 import { supabase } from '../lib/supabase'
+import { updateDailyStreak } from './gamificationService'
 import type {
   CustomList,
   CustomListInsert,
@@ -318,6 +319,9 @@ export async function toggleFavorite(
 
       console.log(`[UserMovieService] Movie ${movieId} unliked`)
 
+      // Atualizar streak diário (mesmo sem ganhar pontos)
+      await updateDailyStreak(userId)
+
       // Disparar evento
       window.dispatchEvent(new CustomEvent('favoriteChanged', { detail: { movieId, isLiked: false } }))
 
@@ -334,6 +338,9 @@ export async function toggleFavorite(
       if (error) throw error
 
       console.log(`[UserMovieService] Movie ${movieId} liked`)
+
+      // Atualizar streak diário (mesmo sem ganhar pontos)
+      await updateDailyStreak(userId)
 
       // Disparar evento
       window.dispatchEvent(new CustomEvent('favoriteChanged', { detail: { movieId, isLiked: true } }))

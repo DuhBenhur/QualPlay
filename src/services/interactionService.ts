@@ -6,7 +6,7 @@
 // ============================================================================
 
 import { supabase } from '../lib/supabase'
-import { addPoints } from './gamificationService'
+import { addPoints, updateDailyStreak } from './gamificationService'
 import { POINTS } from '../constants/gamification'
 import type {
     Rating,
@@ -160,7 +160,12 @@ export async function rateMovie(
             addPoints(userId, POINTS.RATE_MOVIE, 'Avaliação de Filme')
         }
 
+
         console.log(`[Rating] Movie ${movieId} rated ${score} stars`)
+
+        // Atualizar streak diário (mesmo se não ganhou pontos)
+        await updateDailyStreak(userId)
+
         return { data: result, error: null }
     } catch (error) {
         console.error('[Rating] Error rating movie:', error)
