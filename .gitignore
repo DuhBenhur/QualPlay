@@ -31,4 +31,9 @@ TECNOLOGIAS_EXPLICADAS.md
 TECNOLOGIAS_EXPLICADAS2.md
 documentacao_completa.md
 supabase_setup.md
+disable_rls_debug.sql
+fix_anonymous_profile.sql
+fix_profile_name_v2.sql
+fix_rls.sql
+supabase_social_schema.sql
 .env

@@ -54,15 +54,11 @@ const supabase = isSupabaseConfigured ? safeCreateClient(supabaseUrl, supabaseAn
     storageKey: 'qualplay-auth',
     storage: localStorage,
     flowType: 'pkce',
-    debug: true, // Habilitar debug temporariamente para investigar
+    debug: false, // Desabilitar debug no Netlify
     onAuthStateChange: (event: any, session: any) => {
       // Proteção adicional para mudanças de estado de auth
       try {
-        console.log('📢 SUPABASE AUTH DEBUG - State Change:', event);
-        console.log('📢 Session User:', session?.user?.email);
-        if (event === 'SIGNED_IN') {
-          console.log('✅ LOGIN SUCESSO DETECTADO!');
-        }
+        console.log('Auth state change:', event, session?.user?.email);
       } catch (error) {
         console.warn('Erro ao processar mudança de auth state:', error);
       }

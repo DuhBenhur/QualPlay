@@ -10,9 +10,10 @@ import ShareButton from '../ShareButton'
 
 interface LeaderboardProps {
     limit?: number
+    onNavigate?: (page: 'home' | 'about' | 'contact' | 'community') => void
 }
 
-const Leaderboard: React.FC<LeaderboardProps> = ({ limit = 10 }) => {
+const Leaderboard: React.FC<LeaderboardProps> = ({ limit = 10, onNavigate }) => {
     const { user } = useAuth()
     const [entries, setEntries] = useState<LeaderboardEntry[]>([])
     const [loading, setLoading] = useState(true)
@@ -118,8 +119,12 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ limit = 10 }) => {
 
                         <button
                             onClick={() => {
-                                // Scroll to top para ir para busca
-                                window.scrollTo({ top: 0, behavior: 'smooth' })
+                                if (onNavigate) {
+                                    onNavigate('home');
+                                } else {
+                                    // Fallback: scroll to top para ir para busca
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }
                             }}
                             className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors font-medium"
                         >

@@ -112,10 +112,10 @@ const UserBadges: React.FC<UserBadgesProps> = ({
                                     <div
                                         key={badge.id}
                                         className={`
-                                            group relative overflow-hidden rounded-2xl border p-4 transition-all duration-300
+                                            group relative overflow-hidden rounded-2xl p-4 transition-all duration-300
                                             ${isEarned
-                                                ? 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800/60 hover:border-slate-600 hover:shadow-lg hover:shadow-indigo-500/10'
-                                                : 'bg-slate-900/30 border-slate-800/50 opacity-60'}
+                                                ? 'bg-slate-800/40 border-2 border-green-500/60 shadow-lg shadow-green-500/10 hover:bg-slate-800/60 hover:border-green-500/80'
+                                                : 'bg-slate-900/30 border border-slate-800/50 opacity-60'}
                                         `}
                                     >
                                         {/* Background Glow Effect for Earned */}
@@ -152,15 +152,10 @@ const UserBadges: React.FC<UserBadgesProps> = ({
                                             </div>
 
                                             <div className="flex-1 pt-0.5">
-                                                <div className="flex items-center justify-between mb-1 gap-2">
+                                                <div className="mb-1">
                                                     <h5 className={`font-bold ${isEarned ? 'text-white' : 'text-slate-500'}`}>
                                                         {badge.name}
                                                     </h5>
-                                                    {isEarned && (
-                                                        <span className="text-[10px] font-bold px-1.5 py-0.5 bg-green-500/10 text-green-400 rounded border border-green-500/20">
-                                                            DESBLOQUEADO
-                                                        </span>
-                                                    )}
                                                 </div>
                                                 <p className={`text-xs leading-relaxed ${isEarned ? 'text-slate-400' : 'text-slate-600'}`}>
                                                     {badge.description}

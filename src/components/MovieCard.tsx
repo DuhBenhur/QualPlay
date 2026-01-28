@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, Calendar, User, Play, Tv, Heart } from 'lucide-react';
+import { Star, Calendar, User, Play, Tv, Heart, Users } from 'lucide-react';
 import { MovieDetails } from '../types/movie';
 import { getImageUrl } from '../services/tmdbApi';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,6 +7,7 @@ import { StarRating } from './Ratings';
 import { rateMovie } from '../services/interactionService';
 import { toggleFavorite } from '../services/userMovieService';
 import { useUserMovieData } from '../hooks/useUserMovieData';
+import { useQualPlayRating } from '../hooks/useQualPlayRating';
 import type { SearchLoggingContext } from '../contexts/SearchContext';
 
 interface MovieCardProps {
@@ -30,6 +31,9 @@ const MovieCard: React.FC<MovieCardProps> = ({
 
   // Usar o hook para obter dados do usuário sobre este filme
   const { isLiked, rating } = useUserMovieData(movie.id);
+
+  // Buscar rating da comunidade QualPlay
+  const qualplayRating = useQualPlayRating(movie.id);
 
   const handleRatingChange = async (score: 1 | 2 | 3 | 4 | 5) => {
     if (!user) return;
@@ -200,11 +204,31 @@ const MovieCard: React.FC<MovieCardProps> = ({
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-70 transition-all duration-300 flex items-center justify-center">
           <Play className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" size={48} />
         </div>
-        <div className="absolute top-3 right-3 bg-black bg-opacity-75 rounded-full px-2 py-1 flex items-center gap-1">
-          <Star className="text-yellow-400 fill-current" size={14} />
-          <span className="text-white text-sm font-medium">
-            {safeMovie.vote_average.toFixed(1)}
-          </span>
+        {/* Ratings: TMDB e QualPlay */}
+        <div className="absolute top-3 right-3 flex flex-col gap-1.5">
+          {/* TMDB Rating */}
+          <div className="bg-black bg-opacity-75 rounded-md px-2 py-1 flex items-center gap-1 backdrop-blur-sm">
+            <span className="text-slate-400 text-[10px] uppercase font-medium">TMDB</span>
+            <Star className="text-yellow-400 fill-current" size={12} />
+            <span className="text-white text-xs font-medium">
+              {safeMovie.vote_average.toFixed(1)}
+            </span>
+          </div>
+
+          {/* QualPlay Rating */}
+          {qualplayRating ? (
+            <div className="bg-blue-600 bg-opacity-90 rounded-md px-2 py-1 flex items-center gap-1 backdrop-blur-sm">
+              <Users className="text-white" size={12} />
+              <span className="text-white text-xs font-medium">
+                {qualplayRating.average.toFixed(1)}
+              </span>
+              <span className="text-blue-200 text-[10px]">({qualplayRating.count})</span>
+            </div>
+          ) : (
+            <div className="bg-slate-700 bg-opacity-90 rounded-md px-2 py-1 backdrop-blur-sm">
+              <span className="text-slate-400 text-[10px]">Sem aval. QualPlay</span>
+            </div>
+          )}
         </div>
 
         {/* Botão de Favorito */}

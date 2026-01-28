@@ -25,7 +25,7 @@ export class RecommendationService {
 
       // Análise de preferências
       const preferences = this.analyzeUserPreferences(userMovies)
-      
+
       // Gerar diferentes tipos de recomendação
       const [collaborative, contentBased, trending] = await Promise.all([
         this.generateCollaborativeRecommendations(user.id, preferences),
@@ -113,7 +113,7 @@ export class RecommendationService {
 
       // Diretores
       if (movie.movie_data.director) {
-        directorCount[movie.movie_data.director] = 
+        directorCount[movie.movie_data.director] =
           (directorCount[movie.movie_data.director] || 0) + 1
       }
 
@@ -130,15 +130,15 @@ export class RecommendationService {
 
     return {
       favoriteGenres: Object.entries(genreCount)
-        .sort(([,a], [,b]) => b - a)
+        .sort(([, a], [, b]) => b - a)
         .slice(0, 5)
         .map(([genre]) => genre),
       favoriteDirectors: Object.entries(directorCount)
-        .sort(([,a], [,b]) => b - a)
+        .sort(([, a], [, b]) => b - a)
         .slice(0, 3)
         .map(([director]) => director),
       preferredDecades: Object.entries(yearCount)
-        .sort(([,a], [,b]) => b - a)
+        .sort(([, a], [, b]) => b - a)
         .slice(0, 3)
         .map(([decade]) => parseInt(decade)),
       averageRating: ratedMovies > 0 ? totalRating / ratedMovies : 7.0
@@ -161,22 +161,22 @@ export class RecommendationService {
 
       // Calcular similaridade baseada em gêneros
       const userSimilarity: Record<string, number> = {}
-      
+
       similarUsers.forEach(userMovie => {
         const similarity = this.calculateGenreSimilarity(
           preferences.favoriteGenres,
           userMovie.movie_data.genres
         )
-        
+
         if (similarity > 0.3) { // Threshold de similaridade
-          userSimilarity[userMovie.user_id] = 
+          userSimilarity[userMovie.user_id] =
             (userSimilarity[userMovie.user_id] || 0) + similarity
         }
       })
 
       // Buscar filmes dos usuários similares
       const topSimilarUsers = Object.entries(userSimilarity)
-        .sort(([,a], [,b]) => b - a)
+        .sort(([, a], [, b]) => b - a)
         .slice(0, 10)
         .map(([userId]) => userId)
 
@@ -216,7 +216,7 @@ export class RecommendationService {
     try {
       // Usar TMDB API para descobrir filmes similares
       const genreIds = this.mapGenresToIds(preferences.favoriteGenres)
-      
+
       const results = await discoverMovies({
         genres: genreIds,
         yearStart: Math.min(...preferences.preferredDecades),
@@ -294,7 +294,7 @@ export class RecommendationService {
     const set2 = new Set(genres2)
     const intersection = new Set([...set1].filter(x => set2.has(x)))
     const union = new Set([...set1, ...set2])
-    
+
     return intersection.size / union.size
   }
 
@@ -325,5 +325,174 @@ export class RecommendationService {
     return genreNames
       .map(name => genreMap[name])
       .filter(id => id !== undefined)
+  }
+
+  // ============================================================================
+  // 🌟 NOVAS FUNÇÕES: RECOMENDAÇÕES BASEADAS EM RATINGS REAIS
+  // ============================================================================
+
+  /**
+   * Busca filmes recomendados baseados em avaliações reais da comunidade
+   * - Para usuários novos: retorna filmes mais bem avaliados
+   * - Para usuários ativos: retorna filmes de usuários com gostos similares
+   */
+  static async getRecommendationsFromRatings(
+    userId: string | null,
+    limit: number = 10
+  ): Promise<MovieDetails[]> {
+    try {
+      if (!userId) {
+        return this.getTopRatedFromCommunity(limit)
+      }
+
+      // 1. Buscar avaliações altas do usuário (>= 4 estrelas)
+      const { data: userHighRatings } = await supabase
+        .from('ratings')
+        .select('movie_id, score')
+        .eq('user_id', userId)
+        .gte('score', 4)
+
+      if (!userHighRatings || userHighRatings.length === 0) {
+        return this.getTopRatedFromCommunity(limit)
+      }
+
+      const userMovieIds = userHighRatings.map(r => r.movie_id)
+
+      // 2. Buscar outros usuários que também avaliaram bem esses filmes
+      const { data: similarUsersRatings } = await supabase
+        .from('ratings')
+        .select('user_id, movie_id, score')
+        .in('movie_id', userMovieIds)
+        .neq('user_id', userId)
+        .gte('score', 4)
+
+      if (!similarUsersRatings || similarUsersRatings.length === 0) {
+        return this.getTopRatedFromCommunity(limit)
+      }
+
+      // 3. Agregar scores de filmes recomendados
+      const movieScores = new Map<number, {
+        total: number
+        count: number
+      }>()
+
+      similarUsersRatings.forEach(rating => {
+        if (userMovieIds.includes(rating.movie_id)) return // Já avaliou
+
+        const current = movieScores.get(rating.movie_id) || { total: 0, count: 0 }
+        movieScores.set(rating.movie_id, {
+          total: current.total + rating.score,
+          count: current.count + 1
+        })
+      })
+
+      // 4. Buscar contagem de reviews
+      const movieIds = Array.from(movieScores.keys())
+      if (movieIds.length === 0) {
+        return this.getTopRatedFromCommunity(limit)
+      }
+
+      const { data: reviews } = await supabase
+        .from('reviews')
+        .select('movie_id')
+        .in('movie_id', movieIds)
+
+      const reviewCounts = new Map<number, number>()
+      reviews?.forEach(review => {
+        reviewCounts.set(review.movie_id, (reviewCounts.get(review.movie_id) || 0) + 1)
+      })
+
+      // 5. Calcular relevance score e ordenar
+      const recommendations = Array.from(movieScores.entries())
+        .filter(([_, data]) => data.count >= 2) // Mínimo 2 avaliações
+        .map(([movie_id, data]) => {
+          const avg = data.total / data.count
+          const reviewCount = reviewCounts.get(movie_id) || 0
+          return {
+            movie_id,
+            avg,
+            count: data.count,
+            score: avg * Math.log(data.count + 1) + reviewCount * 0.1
+          }
+        })
+        .sort((a, b) => b.score - a.score)
+        .slice(0, limit)
+
+      // 6. Buscar detalhes dos filmes no TMDB
+      const { getMovieDetails } = await import('./tmdbApi')
+      const movieDetails = await Promise.all(
+        recommendations.map(rec => getMovieDetails(rec.movie_id))
+      )
+
+      return movieDetails.filter(movie => movie !== null) as MovieDetails[]
+
+    } catch (error) {
+      console.error('[RecommendationService] Erro ao gerar recomendações:', error)
+      return []
+    }
+  }
+
+  /**
+   * Retorna filmes mais bem avaliados pela comunidade
+   * Usado para usuários novos ou quando não há dados suficientes
+   */
+  static async getTopRatedFromCommunity(limit: number = 10): Promise<MovieDetails[]> {
+    try {
+      // Buscar avaliações recentes >= 4 estrelas
+      const { data: topRated } = await supabase
+        .from('ratings')
+        .select('movie_id, score')
+        .gte('score', 4)
+        .order('created_at', { ascending: false })
+        .limit(200)
+
+      if (!topRated || topRated.length === 0) {
+        console.log('[RecommendationService] Nenhuma avaliação encontrada na comunidade')
+        return []
+      }
+
+      // Agregar por filme
+      const movieStats = new Map<number, { total: number, count: number }>()
+
+      topRated.forEach(rating => {
+        const current = movieStats.get(rating.movie_id) || { total: 0, count: 0 }
+        movieStats.set(rating.movie_id, {
+          total: current.total + rating.score,
+          count: current.count + 1
+        })
+      })
+
+      // Filtrar filmes com pelo menos 3 avaliações
+      const topMovies = Array.from(movieStats.entries())
+        .filter(([_, data]) => data.count >= 3)
+        .map(([movie_id, data]) => ({
+          movie_id,
+          avg: data.total / data.count,
+          count: data.count,
+          score: (data.total / data.count) * Math.log(data.count + 1)
+        }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, limit)
+
+      if (topMovies.length === 0) {
+        console.log('[RecommendationService] Não há filmes com 3+ avaliações')
+        return []
+      }
+
+      // Buscar detalhes no TMDB
+      const { getMovieDetails } = await import('./tmdbApi')
+      const movieDetails = await Promise.all(
+        topMovies.map(movie => getMovieDetails(movie.movie_id))
+      )
+
+      const filtered = movieDetails.filter(movie => movie !== null) as MovieDetails[]
+      console.log(`[RecommendationService] ${filtered.length} filmes populares encontrados`)
+
+      return filtered
+
+    } catch (error) {
+      console.error('[RecommendationService] Erro ao buscar populares:', error)
+      return []
+    }
   }
 }

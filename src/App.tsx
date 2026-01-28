@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, List, Film, HelpCircle } from 'lucide-react';
+import { Grid, List, Film, HelpCircle, Search } from 'lucide-react';
 import Navigation from './components/Navigation';
 import SearchSidebar from './components/SearchSidebar';
+import { useIsMobile } from './hooks/useIsMobile';
 import MovieCard from './components/MovieCard';
 import MovieTable from './components/MovieTable';
 import MovieDetails from './components/MovieDetails';
@@ -32,6 +33,10 @@ function App() {
   const [savedMoviesCount, setSavedMoviesCount] = useState(0);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // Mobile states
+  const isMobile = useIsMobile();
+  const [showSidebar, setShowSidebar] = useState(false);
 
   // Verificar se é a primeira visita para mostrar tutorial
   useEffect(() => {
@@ -265,17 +270,32 @@ function App() {
       />
 
       <div className="flex flex-col md:flex-row">
-        {/* Sidebar - Full width no mobile, fixed width no desktop */}
-        <div className="w-full md:w-80 bg-slate-800 border-b md:border-r md:border-b-0 border-slate-700 overflow-y-auto h-auto md:h-screen">
-          <SearchSidebar
-            onSearch={handleSearch}
-            onFilesProcessed={handleFilesProcessed}
-            onReset={handleReset}
-            isLoading={isLoading}
-          />
-        </div>
+        {/* Sidebar - Condicional em mobile, sempre visível no desktop */}
+        {(!isMobile || showSidebar) && (
+          <div className={`
+            bg-slate-800 border-slate-700 overflow-y-auto
+            ${isMobile
+              ? 'fixed inset-0 z-50'
+              : 'w-full md:w-80 border-b md:border-r md:border-b-0 h-auto md:h-screen'
+            }
+          `}>
+            <SearchSidebar
+              onSearch={(...args) => {
+                handleSearch(...args);
+                if (isMobile) setShowSidebar(false); // Fechar após buscar em mobile
+              }}
+              onFilesProcessed={handleFilesProcessed}
+              onReset={() => {
+                handleReset();
+                if (isMobile) setShowSidebar(false); // Fechar após reset em mobile
+              }}
+              isLoading={isLoading}
+              onClose={isMobile ? () => setShowSidebar(false) : undefined}
+            />
+          </div>
+        )}
 
-        <main className="flex-1 p-3 md:p-6">
+        <main className="flex-1 p-3 md:p-6 pb-24 md:pb-6">{/* Bottom padding para FAB em mobile */}
           <div className="max-w-7xl mx-auto">
             {/* Lista de filmes do usuário (se logado) */}
             {user && <UserMovieList onMovieClick={handleSavedMovieClick} />}
@@ -369,6 +389,7 @@ function App() {
 
                 <RecommendationEngine
                   watchedMovies={movies}
+                  userId={user?.id || null}
                   onMovieClick={handleMovieClick}
                 />
               </>
@@ -401,6 +422,7 @@ function App() {
                 <div className="max-w-2xl mx-auto px-4">
                   <RecommendationEngine
                     watchedMovies={[]}
+                    userId={user?.id || null}
                     onMovieClick={handleMovieClick}
                   />
                 </div>
@@ -430,6 +452,17 @@ function App() {
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
       />
+
+      {/* Floating Action Button - Apenas Mobile */}
+      {isMobile && (
+        <button
+          onClick={() => setShowSidebar(true)}
+          className="fixed bottom-6 right-6 z-30 w-14 h-14 bg-blue-600 rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 hover:scale-110 transition-all duration-300 active:scale-95"
+          aria-label="Abrir busca"
+        >
+          <Search className="text-white" size={24} />
+        </button>
+      )}
 
     </div>
   );

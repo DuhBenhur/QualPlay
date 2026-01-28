@@ -4,8 +4,10 @@ import { MovieDetails } from '../types/movie';
 import { discoverMovies } from '../services/tmdbApi';
 import MovieCard from './MovieCard';
 
+
 interface RecommendationEngineProps {
   watchedMovies: MovieDetails[];
+  userId: string | null; // ✅ Para buscar recomendações da comunidade
   onMovieClick: (movie: MovieDetails) => void;
 }
 
@@ -25,9 +27,10 @@ interface UserProfile {
   runtimePreferences: { min: number; max: number; avg: number };
 }
 
-const RecommendationEngine: React.FC<RecommendationEngineProps> = ({ 
-  watchedMovies, 
-  onMovieClick 
+const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
+  watchedMovies,
+  userId, // ✅ NOVO
+  onMovieClick
 }) => {
   const [recommendations, setRecommendations] = useState<MovieDetails[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +46,7 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
 
   useEffect(() => {
     generateAdvancedRecommendations();
-  }, [watchedMovies, recommendationType]);
+  }, [watchedMovies, recommendationType, userId]); // ✅ Reagir a userId
 
   // 🧠 ANÁLISE AVANÇADA DO PERFIL DO USUÁRIO
   const analyzeUserProfile = (): UserProfile => {
@@ -162,7 +165,7 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
     let yearScore = 0;
     const movieYear = new Date(movie.release_date).getFullYear();
     const movieDecade = Math.floor(movieYear / 10) * 10;
-    
+
     if (type === 'trending') {
       // Para trending, priorizar filmes mais novos
       const currentYear = new Date().getFullYear();
@@ -209,7 +212,7 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
   const generateAdvancedRecommendations = async () => {
     setIsLoading(true);
     console.log(`🔍 Gerando recomendações avançadas tipo: ${recommendationType}`);
-    
+
     try {
       const userProfile = analyzeUserProfile();
       console.log('👤 Perfil do usuário analisado');
@@ -217,7 +220,7 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
       // 🎯 CONFIGURAR FILTROS BASEADOS NO PERFIL
       let filters;
       const topGenres = Object.entries(userProfile.genrePreferences)
-        .sort(([,a], [,b]) => b - a)
+        .sort(([, a], [, b]) => b - a)
         .slice(0, 4) // Aumentar para 4 gêneros
         .map(([id]) => parseInt(id));
 
@@ -231,7 +234,7 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
             region: 'BR'
           };
           break;
-          
+
         case 'quality':
           filters = {
             genres: topGenres,
@@ -241,7 +244,7 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
             region: 'BR'
           };
           break;
-          
+
         case 'trending':
           // Filmes populares do último ano
           filters = {
@@ -257,7 +260,7 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
       // 🔍 BUSCAR MÚLTIPLAS PÁGINAS PARA MAIS DIVERSIDADE
       const allCandidates: MovieDetails[] = [];
       const pages = [1, 2, 3, 4]; // Buscar mais páginas
-      
+
       for (const page of pages) {
         try {
           const pageFilters = { ...filters };
@@ -271,17 +274,17 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
       // 🚫 REMOVER FILMES JÁ ASSISTIDOS
       const watchedIds = new Set(watchedMovies.map(m => m.id));
       const candidates = allCandidates.filter(movie => !watchedIds.has(movie.id));
-      
+
       // 🚫 REMOVER FILMES JÁ RECOMENDADOS EM OUTRAS CATEGORIAS
       const otherCategories = Object.keys(recommendationsByType).filter(type => type !== recommendationType);
       const alreadyRecommended = new Set<number>();
-      
+
       otherCategories.forEach(category => {
         recommendationsByType[category].forEach(id => {
           alreadyRecommended.add(id);
         });
       });
-      
+
       const uniqueCandidates = candidates.filter(movie => !alreadyRecommended.has(movie.id));
       console.log(`🔄 Removidos ${candidates.length - uniqueCandidates.length} filmes já recomendados em outras categorias`);
 
@@ -293,10 +296,10 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
         .filter(scored => scored.score > 0.2) // Threshold mínimo
         .sort((a, b) => b.score - a.score);
 
-      console.log(`🏆 Top 5 scores:`, scoredMovies.slice(0, 5).map(s => ({ 
-        title: s.movie.title, 
-        score: s.score.toFixed(3), 
-        reasons: s.reasons 
+      console.log(`🏆 Top 5 scores:`, scoredMovies.slice(0, 5).map(s => ({
+        title: s.movie.title,
+        score: s.score.toFixed(3),
+        reasons: s.reasons
       })));
 
       // 🎲 DIVERSIFICAÇÃO INTELIGENTE
@@ -305,14 +308,14 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
       // Atualizar recomendações e armazenar IDs para evitar repetição
       const newRecommendations = diversifiedRecommendations.map(scored => scored.movie);
       setRecommendations(newRecommendations);
-      
+
       // Atualizar conjunto de IDs recomendados para esta categoria
       const newRecommendedIds = new Set(newRecommendations.map(movie => movie.id));
       setRecommendationsByType(prev => ({
         ...prev,
         [recommendationType]: newRecommendedIds
       }));
-      
+
       console.log(`✅ Recomendações finalizadas: ${newRecommendations.length} filmes únicos`);
     } catch (error) {
       console.error('❌ Erro ao gerar recomendações avançadas:', error);
@@ -342,7 +345,7 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
       // Priorizar diversidade, mas não ser muito restritivo
       // Verificar se este filme já foi selecionado
       if (selectedIds.has(movie.id)) continue;
-      
+
       const genreUsed = usedGenres.has(primaryGenre);
       const directorUsed = usedDirectors.has(director);
       const decadeUsed = usedDecades.has(decade);
@@ -369,10 +372,10 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
 
     // 🔄 SEGUNDA PASSADA: Completar com os melhores restantes
     if (selected.length < count) {
-      const remaining = scoredMovies.filter(scored => 
+      const remaining = scoredMovies.filter(scored =>
         !selectedIds.has(scored.movie.id)
       );
-      
+
       for (const scored of remaining) {
         if (selected.length >= count) break;
         if (!selectedIds.has(scored.movie.id)) {
@@ -433,37 +436,34 @@ const RecommendationEngine: React.FC<RecommendationEngineProps> = ({
             Recomendações para Você
           </h3>
         </div>
-        
+
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => setRecommendationType('smart')}
-            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
-              recommendationType === 'smart'
-                ? 'bg-purple-600 text-white'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
+            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${recommendationType === 'smart'
+              ? 'bg-purple-600 text-white'
+              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
           >
             <Filter size={16} />
             Inteligente
           </button>
           <button
             onClick={() => setRecommendationType('quality')}
-            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
-              recommendationType === 'quality'
-                ? 'bg-purple-600 text-white'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
+            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${recommendationType === 'quality'
+              ? 'bg-purple-600 text-white'
+              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
           >
             <Star size={16} />
             Qualidade
           </button>
           <button
             onClick={() => setRecommendationType('trending')}
-            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
-              recommendationType === 'trending'
-                ? 'bg-purple-600 text-white'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
+            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${recommendationType === 'trending'
+              ? 'bg-purple-600 text-white'
+              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
           >
             <TrendingUp size={16} />
             Em Alta
