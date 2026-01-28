@@ -60,9 +60,9 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onMovieClick, onLogin, on
     useEffect(() => {
         const init = async () => {
             await loadCommunityData()
-            // Carregar gamificação apenas depois do feed principal, se tiver usuário
+            // Carregar gamificação em paralelo, sem delay
             if (user) {
-                setTimeout(() => loadUserGamification(), 1000)
+                loadUserGamification()
             }
         }
         init()
@@ -84,9 +84,11 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onMovieClick, onLogin, on
     const loadCommunityData = async () => {
         setLoading(true)
         try {
-            // Executar em sequência em vez de paralelo para aliviar a rede
-            await loadStats()
-            await loadTrendingMovies()
+            // Executar em PARALELO para carregar mais rápido
+            await Promise.all([
+                loadStats(),
+                loadTrendingMovies()
+            ])
         } catch (e) {
             console.error(e)
         } finally {
@@ -145,9 +147,9 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onMovieClick, onLogin, on
         }
 
         try {
-            // Timeout de 15 segundos para evitar erros em conexões lentas
+            // Timeout de 5 segundos para mostrar erro mais rapidamente
             const timeout = new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error('Timeout ao carregar estatísticas')), 15000)
+                setTimeout(() => reject(new Error('Timeout ao carregar estatísticas')), 5000)
             )
 
             const fetchData = async () => {
@@ -204,9 +206,9 @@ const CommunityPage: React.FC<CommunityPageProps> = ({ onMovieClick, onLogin, on
         }
 
         try {
-            // Timeout de 15 segundos
+            // Timeout de 5 segundos para consistência
             const timeout = new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error('Timeout ao carregar filmes em alta')), 15000)
+                setTimeout(() => reject(new Error('Timeout ao carregar filmes em alta')), 5000)
             )
 
             const fetchTrending = async () => {
